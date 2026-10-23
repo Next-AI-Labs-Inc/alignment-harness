@@ -1,0 +1,537 @@
+#!/usr/bin/env node
+'use strict';
+// alignment-harness — the command the agent (and you) run to talk to the harness.
+//
+//   alignment-harness score --task "..." --ac N --hp N --ew N [--category c]
+//                           [--touches-user-state] [--impact-tier t] [--ux-items N]
+//   alignment-harness status
+//   alignment-harness contract add --intent "When ... then ..." --verify "<command>"
+//   alignment-harness contract verify <n|all>   runs each item's check; marks it verified only if it passes
+//                                  |  contract list  |  contract clear
+//   alignment-harness contract replace <n> --verify "<fixed command>" [--intent "..."]  fix a broken check
+//                                  |  contract remove <n> --why "<reason>"   drop one that no longer belongs
+//   alignment-harness attest --intent "..." --certainty N --scope TRUE|FALSE
+//                           after printing COHERENCE_CHECK: records what the agent understood
+//                           and lets the coherence gate open for this message
+//   alignment-harness doctor          is each piece set up, and is it working?
+//   alignment-harness config path|show
+//   alignment-harness risk-table path|show
+//   alignment-harness setup status | setup mark <checkpoint> <done|skipped|later>
+//   alignment-harness switch <dotted.name> <on|off|block|remind|value>   change one setting
+//   alignment-harness settings          open the settings page (local, this machine only)
+//   alignment-harness settings list [--json] | get <name> [--json] | set <name> <value>
+//   alignment-harness conflicts        your own hooks/skills that duplicate a harness piece
+//   alignment-harness compaction scope --intent "..." --certainty N [--decomposed "a|b"]
+//                   | compaction put|get|list|open-items|item <id>#<n> --status s
+//   alignment-harness intent|seed|proposal add|list|get|update|search ...
+//   alignment-harness correction add --label L --trigger "a|b" --directive D | list | activate <id>
+//   alignment-harness store add <kind> --json '{...}' | store list <kind> [--where k=v]
+//                   | store get <kind> <id> | store update <kind> <id> --json '{...}'
+//   alignment-harness records <kind>   folder where skills keep local records
+//                                      (compactions, proposals, ledger, ...)
+//   alignment-harness record <kind> [--name <file>]   the save step itself:
+//                     reads the record text from stdin (heredoc, `echo |`,
+//                     or --json) and writes it inside records/<kind>. This
+//                     — not `records <kind>` + a raw shell redirect — is
+//                     what a skill's save step should call: it is harness
+//                     bookkeeping the pre-tool coherence gate always allows,
+//                     even before the agent has attested, because it only
+//                     ever writes inside the harness's own data folder (see
+//                     Class B, BRIEF.md). `store add <kind> --json '{...}'`
+//                     is the same idea for a record built as one inline
+//                     JSON argument instead of stdin.
+//
+// The session is taken from --session, else CLAUDE_CODE_SESSION_ID (set by
+// Claude Code in the agent's shell), else the last session a hook saw.
+
+const fs = require('fs');
+const path = require('path');
+const core = require('../lib/core');
+
+function parseArgs(argv) {
+  const out = { _: [] };
+  for (let i = 0; i < argv.length; i++) {
+    const a = argv[i];
+    if (a.startsWith('--')) {
+      const key = a.slice(2);
+      const next = argv[i + 1];
+      if (next === undefined || next.startsWith('--')) out[key] = true;
+      else { out[key] = next; i++; }
+    } else out._.push(a);
+  }
+  return out;
+}
+
+function resolveSession(args) {
+  if (args.session && args.session !== true) return String(args.session);
+  if (process.env.CLAUDE_CODE_SESSION_ID) return process.env.CLAUDE_CODE_SESSION_ID;
+  if (process.env.CLAUDE_SESSION_ID) return process.env.CLAUDE_SESSION_ID;
+  const last = core.readJson(path.join(core.P.data, 'state', 'last-session.json'), null);
+  if (last && last.sessionId) return last.sessionId;
+  return 'unknown-session';
+}
+
+function print(obj, args) {
+  if (args.json) process.stdout.write(`${JSON.stringify(obj, null, 2)}\n`);
+}
+
+function cmdScore(args) {
+  const governer = require('../lib/governer');
+  const sessionId = resolveSession(args);
+  let sila;
+  if (args.sila && args.sila !== true) {
+    const v = String(args.sila).split(',').map(Number);
+    if (v.length === 9 && v.every(Number.isFinite)) {
+      sila = {}; v.forEach((n, i) => { sila[`v${i + 1}`] = n; });
+    }
+  }
+  const r = governer.scoreTask(sessionId, {
+    task: args.task === true ? '' : args.task,
+    category: args.category === true ? undefined : args.category,
+    touchesUserState: !!args['touches-user-state'] && args['touches-user-state'] !== 'false',
+    impactTier: args['impact-tier'] === true ? undefined : args['impact-tier'],
+    ac: args.ac, hp: args.hp, ew: args.ew,
+    sila,
+    uxItems: args['ux-items'],
+    manualScore: args['manual-score'] !== undefined && args['manual-score'] !== true ? Number(args['manual-score']) : undefined,
+  });
+  if (!r.ok) {
+    process.stdout.write(`UNSCORED — the risk score could not be worked out: ${r.error}\n`);
+    process.stdout.write('This session is marked "unscored" (no number was made up). Fix the inputs and run score again.\n');
+    print({ ok: false, sessionId, scoredBy: 'unscored', error: r.error }, args);
+    process.exit(1);
+  }
+  // What the person reads. The saved record (and --json) keep their field names, which other
+  // code and skills read; only these printed lines are in plain words.
+  const rec = r.record;
+  const from = rec.method === 'meta-elevated'
+    ? 'the answers about how far a mistake would travel'
+    : 'what the task is and who it reaches';
+  process.stdout.write([
+    `Risk score: ${rec.overallGovernerScore} out of 100 (${governer.describeScore(rec.overallGovernerScore)})`,
+    `  The task: ${rec.task}`,
+    `  How much this could affect the people using it: ${rec.degreeToWhichThisTaskAffectsWhatUsersExperience} of 100`,
+    `  How far a mistake would carry into future sessions: ${rec.degreeToWhichAgentMistakesWouldCompoundAcrossFutureSessions} of 10`,
+    `  How far a mistake would spread to other systems: ${rec.degreeToWhichGettingThisWrongWouldSpreadToOtherSystems} of 10`,
+    `  How likely this is to break something already working: ${rec.degreeToWhichThisCouldBreakSomethingAlreadyWorking} of 10`,
+    `  The score comes mostly from ${from}.`,
+    rec.calibrated
+      ? '  Measured against your own risk table.'
+      : '  Not calibrated yet: this uses general defaults. /alignment-harness:harness-setup sets up your own risk table.',
+    `  Saved for this session: ${core.sessionFile(sessionId)}`,
+    '',
+  ].join('\n'));
+  print({ ok: true, sessionId, ...rec }, args);
+}
+
+function cmdStatus(args) {
+  const governer = require('../lib/governer');
+  const sessionId = resolveSession(args);
+  const cs = core.currentScore(sessionId);
+  const s = cs.state || {};
+  const { switches, problems } = core.loadSwitches();
+  const lines = [
+    `session: ${sessionId}`,
+    `risk score: ${cs.scored ? `${cs.score} out of 100 (scored by the agent${cs.calibrated ? '' : ', not calibrated yet'})` : `none yet (${cs.scoredBy})`}`,
+    `what that means: ${governer.describeScore(cs.score)}`,
+  ];
+  if (s.baseline) lines.push(`provisional keyword guess (hint only): ${s.baseline.score === null ? 'none' : s.baseline.score} — ${s.baseline.reason}`);
+  const vc = s.verificationContract;
+  if (vc && vc.items && vc.items.length) {
+    lines.push(`checks promised for this task: ${vc.items.filter((i) => i.verified).length} of ${vc.items.length} done (alignment-harness contract list)`);
+  }
+  lines.push(`coherence check: ${switches.coherenceGate.enabled ? switches.coherenceGate.strength : 'off'} · edits wait for a risk score: ${switches.governer.enabled ? switches.governer.gateStrength : 'off'} · proof before "done": ${switches.evidenceGate.enabled ? switches.evidenceGate.strength : 'off'}`);
+  for (const p of problems) lines.push(`problem: ${p}`);
+  process.stdout.write(`${lines.join('\n')}\n`);
+  print({ sessionId, ...cs, switchesProblems: problems }, args);
+}
+
+function cmdContract(args) {
+  const sessionId = resolveSession(args);
+  const sub = args._[1];
+  if (sub === 'add') {
+    const intent = args.intent === true ? '' : args.intent;
+    const verify = args.verify === true ? '' : args.verify;
+    if (!intent || !verify) {
+      process.stdout.write('Need both --intent "When <conditions>, then <what a person experiences>" and --verify "<runnable command>".\n');
+      process.exit(1);
+    }
+    const s = core.updateSession(sessionId, (st) => {
+      st.verificationContract = st.verificationContract || { required: true, items: [] };
+      st.verificationContract.required = true;
+      st.verificationContract.items.push({ intentStatement: intent, verificationCommand: verify, verified: false, addedAt: core.nowIso() });
+      return st;
+    });
+    process.stdout.write(`Added contract item ${s.verificationContract.items.length}: ${intent}\n  verify: ${verify}\n`);
+    return;
+  }
+  if (sub === 'verify') {
+    // An item counts as verified only when its own check runs and passes here. Marking it by
+    // hand would let "all checks passed" be said about checks nobody ran.
+    const which = args._[2];
+    const { execSync } = require('child_process');
+    const before = core.readSession(sessionId) || {};
+    const pending = ((before.verificationContract && before.verificationContract.items) || [])
+      .map((it, i) => ({ it, n: i + 1 }))
+      .filter(({ n }) => which === 'all' || String(n) === String(which));
+    if (!pending.length) { process.stdout.write(`No contract item "${which || ''}". See: alignment-harness contract list\n`); return; }
+    const results = {};
+    for (const { it, n } of pending) {
+      let passed = false; let output = '';
+      try {
+        output = execSync(it.verificationCommand, { cwd: process.cwd(), encoding: 'utf8', timeout: 120000, stdio: ['ignore', 'pipe', 'pipe'] });
+        passed = true;
+      } catch (e) {
+        output = `${e.stdout || ''}${e.stderr || ''}${e.killed ? '\n(timed out after 120 s)' : ''}` || String(e.message || e);
+      }
+      results[n] = passed;
+      const tail = String(output).trim().split('\n').slice(-8).join('\n');
+      process.stdout.write(`${passed ? 'PASS' : 'FAIL'} ${n}. ${it.intentStatement}\n  ran: ${it.verificationCommand}\n${tail ? `  output:\n${tail.replace(/^/gm, '    ')}\n` : ''}`);
+    }
+    const s = core.updateSession(sessionId, (st) => {
+      const items = (st.verificationContract && st.verificationContract.items) || [];
+      items.forEach((it, i) => {
+        if ((i + 1) in results) {
+          it.verified = results[i + 1];
+          it.lastCheckedAt = core.nowIso();
+          if (results[i + 1]) it.verifiedAt = it.lastCheckedAt;
+        }
+      });
+      return st;
+    });
+    const items = (s.verificationContract && s.verificationContract.items) || [];
+    process.stdout.write(`${items.filter((i) => i.verified).length}/${items.length} contract items verified.\n`);
+    if (Object.values(results).some((v) => !v)) process.exitCode = 1;
+    return;
+  }
+  if (sub === 'clear') {
+    core.updateSession(sessionId, (st) => { delete st.verificationContract; return st; });
+    process.stdout.write('Verification contract cleared for this session.\n');
+    return;
+  }
+  // A check that was written wrong (a typo, a wrong path, a command that can't run here) used to
+  // leave the agent stuck at the finish line until the person told it to clear everything. The
+  // agent can now fix or drop one check itself. Every change is kept in the session's record and
+  // shown by `contract list`, so the person can see exactly what changed and why.
+  if (sub === 'replace' || sub === 'remove') {
+    const n = Number(args._[2]);
+    const cur = core.readSession(sessionId) || {};
+    const items = (cur.verificationContract && cur.verificationContract.items) || [];
+    if (!Number.isInteger(n) || n < 1 || n > items.length) {
+      process.stdout.write(`No contract item "${args._[2] || ''}". There ${items.length === 1 ? 'is 1 item' : `are ${items.length} items`}; see: alignment-harness contract list\n`);
+      process.exit(1);
+    }
+    const why = args.why && args.why !== true ? String(args.why).trim() : '';
+    if (sub === 'replace') {
+      const intent = args.intent && args.intent !== true ? String(args.intent).trim() : '';
+      const verify = args.verify && args.verify !== true ? String(args.verify).trim() : '';
+      if (!intent && !verify) { process.stdout.write('Give the corrected --verify "<runnable command>" and/or --intent "When …, then …".\n'); process.exit(1); }
+      if (!why) { process.stdout.write('Say why the check was wrong, so the user can see it: alignment-harness contract replace <n> --verify "<command>" --why "<reason>". A check that fails because the work is wrong is not a wrong check: fix the work.\n'); process.exit(1); }
+      const s = core.updateSession(sessionId, (st) => {
+        const it = st.verificationContract.items[n - 1];
+        st.verificationContract.changes = (st.verificationContract.changes || []).concat([{ at: core.nowIso(), action: 'replaced', item: n, before: { intentStatement: it.intentStatement, verificationCommand: it.verificationCommand }, why }]);
+        if (intent) it.intentStatement = intent;
+        if (verify) it.verificationCommand = verify;
+        const ch = st.verificationContract.changes[st.verificationContract.changes.length - 1];
+        ch.after = { intentStatement: it.intentStatement, verificationCommand: it.verificationCommand };
+        it.verified = false; delete it.verifiedAt;
+        it.replacedAt = core.nowIso();
+        return st;
+      });
+      const it = s.verificationContract.items[n - 1];
+      core.log('ContractItemReplaced', { sessionId, item: n });
+      process.stdout.write(`Replaced contract item ${n}: ${it.intentStatement}\n  verify: ${it.verificationCommand}\nIt counts as checked only once it passes: alignment-harness contract verify ${n}\nTell the user in this reply what the check was, what it is now, and why.\n`);
+      return;
+    }
+    if (!why) { process.stdout.write('Say why it no longer belongs, so the user can see it: alignment-harness contract remove <n> --why "<reason>"\n'); process.exit(1); }
+    const s = core.updateSession(sessionId, (st) => {
+      const [gone] = st.verificationContract.items.splice(n - 1, 1);
+      st.verificationContract.changes = (st.verificationContract.changes || []).concat([{ at: core.nowIso(), action: 'removed', item: n, before: { intentStatement: gone.intentStatement, verificationCommand: gone.verificationCommand }, why }]);
+      return st;
+    });
+    core.log('ContractItemRemoved', { sessionId, item: n });
+    const left = s.verificationContract.items;
+    process.stdout.write(`Removed contract item ${n} (${why}). Tell the user in this reply what it was and why it no longer belongs. ${left.length} left${left.length ? '; the ones after it moved up one number' : ''}:\n`);
+    left.forEach((it, i) => process.stdout.write(`${i + 1}. [${it.verified ? 'x' : ' '}] ${it.intentStatement}\n`));
+    return;
+  }
+  const s = core.readSession(sessionId) || {};
+  const items = (s.verificationContract && s.verificationContract.items) || [];
+  const changes = (s.verificationContract && s.verificationContract.changes) || [];
+  if (!items.length && !changes.length) { process.stdout.write('No verification contract for this session.\n'); return; }
+  items.forEach((it, i) => process.stdout.write(`${i + 1}. [${it.verified ? 'x' : ' '}] ${it.intentStatement}\n     verify: ${it.verificationCommand}\n`));
+  if (changes.length) {
+    process.stdout.write(`Changed during this session (${changes.length}):\n`);
+    for (const c of changes) process.stdout.write(`  ${c.action} item ${c.item} at ${c.at.slice(11, 16)}: was "${c.before.intentStatement}" (verify: ${c.before.verificationCommand})${c.why ? ` — why: ${c.why}` : ''}\n`);
+  }
+}
+
+function cmdConfig(args) {
+  const sub = args._[1];
+  if (sub === 'show') {
+    const { switches, problems } = core.loadSwitches();
+    process.stdout.write(`${JSON.stringify(switches, null, 2)}\n`);
+    for (const p of problems) process.stdout.write(`problem: ${p}\n`);
+    return;
+  }
+  core.seedUserFiles();
+  process.stdout.write(`${core.P.switchesUser}\n`);
+  if (!core.DATA_BOUND) process.stderr.write('Note: this is a temporary copy. The harness has not had its first Claude Code session here yet, so its hooks do not read this file. Start one session first, then edit the file this prints.\n');
+}
+
+function cmdRisk(args) {
+  const sub = args._[1];
+  const r = core.loadRiskTable();
+  if (sub === 'show') {
+    process.stdout.write(`source: ${r.source} · ${r.calibrated ? 'confirmed by you' : 'NOT confirmed (scores are uncalibrated)'}\n`);
+    for (const [k, v] of Object.entries(r.table.categories || {})) {
+      process.stdout.write(`  ${k}: ${typeof v === 'number' ? v : v.score}${v && v.meaning ? ` — ${v.meaning}` : ''}\n`);
+    }
+    return;
+  }
+  process.stdout.write(`${core.P.riskUser}\n  (default, used until you create yours: ${core.P.riskDefault})\n`);
+}
+
+// The coherence gate can't read what the agent printed (the runtime records the reply only after
+// the turn), so the agent hands over its reading of the person here. That keeps a one-line
+// "got it" from opening the gate, and leaves a record the person can check against what they meant.
+function cmdAttest(args) {
+  const sessionId = resolveSession(args);
+  const intent = args.intent === true || !args.intent ? '' : String(args.intent).trim();
+  const certainty = Number(args.certainty);
+  const scope = String(args.scope === true ? '' : args.scope || '').toUpperCase();
+  const missing = [];
+  if (intent.split(/\s+/).filter(Boolean).length < 8) missing.push('--intent "<what the person wants and why, as you heard it, in their terms — at least one full sentence>"');
+  if (!Number.isFinite(certainty) || certainty < 1 || certainty > 100) missing.push('--certainty <1-100, how sure you are that this is what they mean>');
+  if (scope !== 'TRUE' && scope !== 'FALSE') missing.push('--scope TRUE|FALSE (did their message add any new scope?)');
+  if (missing.length) {
+    process.stdout.write(`Not attested — still needed:\n  ${missing.join('\n  ')}\nPrint the full COHERENCE_CHECK in your reply first, then attest with what you printed.\n`);
+    process.exitCode = 1;
+    return;
+  }
+  fs.mkdirSync(core.P.coherence, { recursive: true });
+  fs.appendFileSync(path.join(core.P.coherence, 'reflections.jsonl'), `${JSON.stringify({ at: core.nowIso(), sessionId, intent, certainty, newScope: scope === 'TRUE' })}\n`);
+  fs.writeFileSync(path.join(core.P.coherence, `done-${core.safeId(sessionId)}`), core.nowIso());
+  core.log('CoherenceAttested', { sessionId, certainty, newScope: scope === 'TRUE' });
+  process.stdout.write(`Attested (${certainty}% sure). The coherence gate is open for this message.${certainty < 60 ? ' Under 60%: search memory or ask one tight question before changing anything.' : ''}\n`);
+}
+
+function cmdDoctor(args) {
+  const doctor = require('../lib/doctor');
+  const report = doctor.run();
+  process.stdout.write(doctor.format(report));
+  print(report, args);
+}
+
+// `alignment-harness settings`: the settings page, and the same list for agents.
+//   settings | settings open [--port N] [--no-open] [--idle-minutes N]   the local page
+//   settings list [--json]      every setting: value, allowed values, what it does for you, doc
+//   settings get <name> [--json]
+//   settings set <name> <value> same as `alignment-harness switch <name> <value>`
+function cmdSettings(args) {
+  const settings = require('../lib/settings');
+  const sub = args._[1] || 'open';
+  if (sub === 'list') {
+    const all = settings.listSettings({ withHealth: !!args.health, withSkills: !!args.skills });
+    if (args.json) { process.stdout.write(`${JSON.stringify(all, null, 2)}\n`); return; }
+    const lines = [`Your switches file: ${all.switchesFile} — changes apply from ${all.appliesFrom}`];
+    for (const p of all.problems) lines.push(`problem: ${p}`);
+    for (const g of all.groups) {
+      const secs = all.sections.filter((s) => s.group === g.id);
+      if (!secs.length) continue;
+      lines.push('', g.name.toUpperCase());
+      for (const sec of secs) {
+        lines.push(`  ${sec.name} — ${sec.what}  [${sec.doc}]`);
+        for (const n of sec.settings) {
+          const s = all.settings.find((x) => x.name === n);
+          const allowed = s.allowed.type === 'enum' ? s.allowed.values.join('/') : s.allowed.type === 'integer' ? `${s.allowed.min}–${s.allowed.max}` : s.allowed.type === 'boolean' ? 'on/off' : 'text';
+          const shown = typeof s.value === 'boolean' ? (s.value ? 'on' : 'off') : JSON.stringify(s.value);
+          lines.push(`    ${s.name} = ${shown}${s.isDefault ? '' : ` (default ${JSON.stringify(s.default)})`}   [${allowed}]  ${s.label}`);
+        }
+      }
+    }
+    lines.push('', 'NOT SWITCHABLE HERE YET');
+    for (const x of all.notSwitchableHere) lines.push(`  ${x.name} (${x.badge})${x.how ? ` — ${x.how}` : ''}`);
+    lines.push('', 'Change one: alignment-harness switch <name> <value>   ·   for agents: alignment-harness settings list --json   ·   the page: alignment-harness settings');
+    process.stdout.write(`${lines.join('\n')}\n`);
+    return;
+  }
+  if (sub === 'get') {
+    const name = String(args._[2] || '');
+    const s = settings.listSettings().settings.find((x) => x.name === name);
+    if (!s) { process.stdout.write(`no setting called ${name} (see: alignment-harness settings list)\n`); process.exit(1); }
+    if (args.json) { process.stdout.write(`${JSON.stringify(s, null, 2)}\n`); return; }
+    process.stdout.write(`${s.name} = ${JSON.stringify(s.value)}${s.isDefault ? ' (the default)' : ` (default ${JSON.stringify(s.default)})`}\n  ${s.label}\n  what it does for you: ${s.forYou}\n${s.whatItDoes ? `  ${s.whatItDoes.replace(/\n/g, '\n  ')}\n` : ''}  allowed: ${JSON.stringify(s.allowed)}\n  docs: ${s.doc}\n  change it: ${s.howToChange}\n`);
+    return;
+  }
+  if (sub === 'set') {
+    const r = settings.setSetting(String(args._[2] || ''), args._[3] === undefined ? '' : String(args._[3]));
+    process.stdout.write(`${r.name}: ${JSON.stringify(r.before)} → ${JSON.stringify(r.after)} (applies from the next message)\n`);
+    return;
+  }
+  if (sub !== 'open') { process.stdout.write('usage: settings [open] | settings list [--json] | settings get <name> | settings set <name> <value>\n'); process.exit(1); }
+  if (!core.DATA_BOUND) { process.stdout.write(`${settings.NOT_BOUND}\n(To see what each setting does in the meantime: alignment-harness settings list)\n`); process.exit(1); }
+  core.seedUserFiles();
+  const idle = Number(args['idle-minutes']) || 30;
+  require('../lib/settings-server').start({ port: args.port, idleMinutes: idle, onClose: () => process.exit(0) }).then((s) => {
+    process.stdout.write(`Settings page: ${s.url}\nIt runs on this machine only, and closes after ${idle} idle minutes or Ctrl-C.\nEvery change is written to ${core.P.switchesUser} and applies from your next message.\n`);
+    const noOpen = args['no-open'] || process.env.ALIGNMENT_HARNESS_NO_OPEN;
+    if (!noOpen && !require('../lib/settings-server').openBrowser(s.url)) process.stdout.write('Open the address above in your browser.\n');
+    process.on('SIGINT', () => { s.close(); process.exit(0); });
+    process.on('SIGTERM', () => { s.close(); process.exit(0); });
+  }).catch((e) => { process.stdout.write(`alignment-harness: the settings page could not start (${e.message}). Every setting can still be changed with: alignment-harness switch <name> <value>\n`); process.exit(1); });
+}
+
+function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const cmd = args._[0];
+  try {
+    switch (cmd) {
+      case 'score': return cmdScore(args);
+      case 'status': return cmdStatus(args);
+      case 'contract': return cmdContract(args);
+      case 'attest': return cmdAttest(args);
+      case 'config': return cmdConfig(args);
+      case 'risk-table': return cmdRisk(args);
+      case 'doctor': return cmdDoctor(args);
+      case 'settings': return cmdSettings(args);
+      case 'calibration':
+        // First-session calibration offer (lib/calibration.js, docs/calibration.md).
+        require('../lib/calibration-cli').run(args).then((c) => { process.exitCode = c; }, (e) => { process.stdout.write(`alignment-harness: ${e.message}\n`); process.exitCode = 1; });
+        return undefined;
+      case 'compaction': case 'intent': case 'seed': case 'proposal': case 'correction':
+        require('../lib/cli-records').run(cmd, args, resolveSession(args));
+        return undefined;
+      case 'store': {
+        const store = require('../lib/store');
+        const sub = args._[1]; const kind = args._[2]; const id = args._[3];
+        const readData = () => {
+          if (args.file && args.file !== true) return JSON.parse(fs.readFileSync(String(args.file), 'utf8'));
+          if (args.json && args.json !== true) return JSON.parse(String(args.json));
+          throw new Error('give the record as --json \'{...}\' or --file <path>');
+        };
+        if (sub === 'add') {
+          const r = require('../lib/records').add(kind, readData(), { sessionId: resolveSession(args) });
+          process.stdout.write(`saved ${kind} ${r.id}\n  ${r.file}\n`); return undefined;
+        }
+        if (sub === 'get') { const r = store.get(kind, id); process.stdout.write(`${r ? JSON.stringify(r, null, 2) : `no ${kind} record ${id}`}\n`); return undefined; }
+        if (sub === 'update') { const r = store.update(kind, id, readData()); process.stdout.write(`updated ${kind} ${r.id}\n`); return undefined; }
+        if (sub === 'list') {
+          const where = {};
+          if (args.where && args.where !== true) for (const kv of String(args.where).split(',')) { const [k, ...v] = kv.split('='); where[k] = v.join('='); }
+          const recs = store.list(kind, { where, limit: Number(args.limit) || 50 });
+          if (args.json) { process.stdout.write(`${JSON.stringify(recs, null, 2)}\n`); return undefined; }
+          if (!recs.length) process.stdout.write(`no ${kind} records yet\n`);
+          for (const r of recs) process.stdout.write(`${r.id}  ${String(r.updatedAt || '').slice(0, 16)}  ${String(r.title || r.intent || r.summary || '').slice(0, 90)}\n`);
+          return undefined;
+        }
+        process.stdout.write('usage: store add|list|get|update <kind> ...\n'); return undefined;
+      }
+      case 'records': {
+        const kind = String(args._[1] || '').replace(/[^A-Za-z0-9_-]/g, '') || 'misc';
+        const dir = path.join(core.P.data, 'records', kind);
+        fs.mkdirSync(dir, { recursive: true });
+        process.stdout.write(`${dir}\n`);
+        return undefined;
+      }
+      case 'record': {
+        // Class B fix (BRIEF.md): the one command a skill needs for its
+        // "save my understanding into the harness's own records folder"
+        // first move, with no pipe/redirect for the coherence gate to
+        // misjudge as an arbitrary write. Reads the record text from
+        // stdin (a heredoc, `echo ... |`, or a quoted --json flag all
+        // work the same way) and writes it inside the harness's own
+        // records/<kind> folder — never anywhere else.
+        const kind = String(args._[1] || '').replace(/[^A-Za-z0-9_-]/g, '');
+        if (!kind) { process.stdout.write('usage: alignment-harness record <kind> [--name <file>] < text-or-json (stdin)\n'); process.exit(1); }
+        let text;
+        if (args.json && args.json !== true) text = String(args.json);
+        else {
+          try { text = fs.readFileSync(0, 'utf8'); } catch (_) { text = ''; }
+        }
+        if (!text || !text.trim()) { process.stdout.write('record: no content on stdin (and no --json) — nothing to save\n'); process.exit(1); }
+        const store = require('../lib/store');
+        const name = args.name && args.name !== true ? String(args.name).replace(/[^A-Za-z0-9_.-]/g, '') : null;
+        if (name) {
+          // A named file inside the kind folder — supports both "one file,
+          // appended over time" (e.g. a corpus of before/after pairs) and
+          // "one file per save" usage. Appends when the content looks like
+          // a line-oriented log (.jsonl/.log/.txt) and the file already
+          // exists; otherwise (re)writes the file whole, same as a skill's
+          // own `cat > file` or `cat >> file` would have done.
+          const dir = store.kindDir(kind);
+          const file = path.join(dir, name);
+          const append = /\.(jsonl|log)$/.test(name) && fs.existsSync(file);
+          if (append) fs.appendFileSync(file, text.endsWith('\n') ? text : `${text}\n`);
+          else fs.writeFileSync(file, text);
+          process.stdout.write(`saved ${kind}/${name}\n  ${file}\n`);
+          return undefined;
+        }
+        // No --name: try to parse stdin as one JSON record and save it the
+        // same way `store add` does (id/createdAt/updatedAt bookkeeping).
+        // Falls back to writing the raw text under a generated filename if
+        // it isn't valid JSON, so this never rejects a save the way `store
+        // add --json` would.
+        let data = null;
+        try { data = JSON.parse(text); } catch (_) { data = null; }
+        if (data && typeof data === 'object') {
+          const r = require('../lib/records').add(kind, data, { sessionId: resolveSession(args) });
+          process.stdout.write(`saved ${kind} ${r.id}\n  ${r.file}\n`);
+          return undefined;
+        }
+        const dir = store.kindDir(kind);
+        const id = `${kind.slice(0, 12)}-${Date.now()}`;
+        const file = path.join(dir, `${id}.txt`);
+        fs.writeFileSync(file, text);
+        process.stdout.write(`saved ${kind} ${id} (raw text, not JSON)\n  ${file}\n`);
+        return undefined;
+      }
+      case 'conflicts': {
+        const c = require('../lib/conflicts');
+        const found = c.run(process.cwd());
+        process.stdout.write(c.format(found));
+        print(found, args);
+        return undefined;
+      }
+      case 'switch': {
+        // One shared writer (lib/settings.js) for this command and the settings page: it accepts
+        // only settings that exist and values they allow, changes just that value in place so
+        // every comment stays, and writes atomically.
+        const settings = require('../lib/settings');
+        const key = String(args._[1] || ''); const raw = args._[2];
+        if (!/^[A-Za-z]+(\.[A-Za-z]+)+$/.test(key) || raw === undefined) { process.stdout.write('usage: switch <section.name> <on|off|block|remind|number|text>   (every setting: alignment-harness settings list)\n'); process.exit(1); }
+        const r = settings.setSetting(key, raw);
+        const check = core.loadSwitches();
+        process.stdout.write(`${r.name}: ${JSON.stringify(r.before)} → ${JSON.stringify(settings.getPath(check.switches, r.name))} (applies from the next message)${check.problems.length ? `\nproblem: ${check.problems.join('; ')}` : ''}\n`);
+        return undefined;
+      }
+      case 'setup': {
+        const sub = args._[1];
+        const st = core.readJson(core.P.setup, { checkpoints: {} });
+        if (sub === 'mark') {
+          const cp = String(args._[2] || ''); const val = String(args._[3] || 'done');
+          if (!cp) { process.stdout.write('usage: setup mark <checkpoint> <done|skipped|later>\n'); process.exit(1); }
+          st.checkpoints[cp] = { state: val, at: core.nowIso() };
+          if (cp === 'complete') st.completedAt = core.nowIso();
+          core.writeJsonAtomic(core.P.setup, st);
+        }
+        const names = ['check', 'risk-table', 'voice', 'memory-search', 'oracles', 'dials', 'complete'];
+        for (const n of names) process.stdout.write(`${n}: ${(st.checkpoints[n] && st.checkpoints[n].state) || 'not done'}\n`);
+        return undefined;
+      }
+      case 'paths':
+        process.stdout.write(`data: ${core.P.data}\nswitches: ${core.P.switchesUser}\nrisk table: ${core.P.riskUser}\nrecords: ${path.join(core.P.data, 'records')}\nverbatim messages: ${core.P.verbatim}\nplugin: ${core.PLUGIN_ROOT}\n`);
+        return undefined;
+      case 'session-id': process.stdout.write(`${resolveSession(args)}\n`); return undefined;
+      default:
+        process.stdout.write(fs.readFileSync(__filename, 'utf8').split('\n').slice(2, 32).map((l) => l.replace(/^\/\/ ?/, '')).join('\n') + '\n');
+        return undefined;
+    }
+  } catch (e) {
+    process.stdout.write(`alignment-harness: ${e.message}\n`);
+    process.exit(1);
+  }
+  return undefined;
+}
+
+main();

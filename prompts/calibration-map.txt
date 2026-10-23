@@ -1,0 +1,27 @@
+You are given notes about one person, written from many of their past Claude Code sessions (one JSON note per session: what they were after, corrections they made to an agent, leans, decisions, vocabulary, with each session's id and date). Write the map a new agent reads before working with this person, so it can orient to their intent the moment they speak.
+
+Write Markdown, and nothing else. No preamble. Use exactly these sections, in this order, each as a "## " heading:
+
+## What they are usually working toward
+2-5 sentences on the larger aims that recur across sessions, in their own terms.
+
+## Leans to weigh
+The most useful leans, strongest first, grouped by the situation they fire in. One bullet each: the situation, the lean, why, how many sessions show it, and the session ids in brackets, e.g. [s:1a2b3c4d, s:9f8e7d6c]. Where two leans pull against each other, say so in both bullets. 6-20 bullets.
+
+## Corrections they have had to make
+The mistakes agents made with them that they had to correct, most repeated first, each with the wrong belief, what they meant, and session ids. These matter most: a future agent can avoid making the person correct it again.
+
+## Their words
+Terms and names they use and what they mean by them.
+
+## What I am still unsure of
+Open questions about their intent the notes leave unanswered.
+
+Rules:
+- The notes speak to the person as "you"; keep that: write the map as if talking to them ("you lean toward …"), so it reads the same to them and to the agent.
+- These are leans to weigh, not rules to obey. Never write "always", "never" or "must"; say how strongly the evidence leans and how often it showed up.
+- A lean seen in one session is a slight lean; say so. Do not inflate.
+- Only use quotation marks for words copied exactly from a note's "quote" field. Otherwise paraphrase without quotation marks.
+- Cite session ids as [s:<first 8 characters of the id>].
+- Write in plain words a newcomer understands; explain any code name inside the sentence that uses it.
+- Stay under 1,200 words.

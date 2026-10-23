@@ -1,0 +1,33 @@
+<verification-contract-gate score="{{SCORE}}">
+== INTENT DECOMPOSITION + VERIFICATION CONTRACT (MANDATORY for score >= 20) ==
+
+Has the human assigned you a work product? If yes, BEFORE writing any code:
+
+1. DECOMPOSE into UX intent statements (/intent-db format):
+   - Every statement: "When {user type} does {action}, given {ALL conditions}, then {testable outcome}"
+   - Include ALL conditions: funnel scope, user state, feature flags, fail-open/fail-closed
+   - Include negative conditions too: "When X, users do NOT see Y"
+   - ZERO unconditional statements — each one becomes a hallucination cascade
+
+2. MAP each statement to a RUNNABLE verification command:
+   - API: curl -s localhost:<port>/api/{endpoint} -H '...' | jq .
+   - UI: Open localhost:3000/{page} with ?{params}, verify {what renders}
+   - Test: npx jest {file} — expect 0 failures
+
+3. PRINT the contract to the user BEFORE acting:
+   📋 Verification Contract (score {N}/100):
+   1. WHEN {conditions} THEN {outcome}
+      Verify: {runnable command}
+   2. WHEN {conditions} THEN {outcome}
+      Verify: {runnable command}
+
+4. WRITE each item to the verification contract: {{CLI}} contract add --intent "WHEN {conditions} THEN {outcome}" --verify "{runnable command}"
+
+5. Save it to the session compaction so the user can audit your interpretation:
+   {{CLI}} compaction put --json '{"title":"...","type":"verification-contract","intent":"...","verificationContract":[...]}'
+
+Continue working AFTER printing the contract. The Stop hook WILL BLOCK you from
+claiming done unless you ran the verification commands and showed evidence.
+
+For score < 20: skip this gate. Full guide: /verification-contracts
+</verification-contract-gate>

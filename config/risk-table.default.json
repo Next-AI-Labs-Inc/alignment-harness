@@ -1,0 +1,26 @@
+{
+  "_what": "Which kinds of work are risky for YOUR users. The governer uses this as a floor under its score. These are the general defaults; /harness-setup proposes a table built from your own repository and asks you to confirm each row. Until you confirm, every score is marked uncalibrated.",
+  "confirmed": false,
+  "categories": {
+    "payment":          { "score": 100, "meaning": "Anything that charges, refunds, or changes what someone pays." },
+    "auth":             { "score": 100, "meaning": "Sign-in, sign-up, sessions, passwords, permissions." },
+    "payment-auth":     { "score": 100, "meaning": "Both of the above." },
+    "onboarding":       { "score": 85,  "meaning": "The first minutes of a new user's experience." },
+    "core-feature":     { "score": 75,  "meaning": "The main thing your product does for people." },
+    "cosmetic":         { "score": 20,  "meaning": "Looks only; nothing changes about what works." },
+    "internal-tooling": { "score": 15,  "downstreamFloor": 40, "meaning": "Tools only you or your team use." },
+    "admin-only":       { "score": 0,   "downstreamFloor": 50, "meaning": "Admin screens. Raised if what they do reaches users." },
+    "docs-only":        { "score": 0,   "meaning": "Documentation that nothing reads at runtime." }
+  },
+  "impactTierFloors": {
+    "indirect": 40,
+    "config": 65,
+    "communication": 85,
+    "revenue": 95
+  },
+  "coreFeatures": [],
+  "exampleOnly_coreFeatures_from_the_author": {
+    "_label": "EXAMPLE ONLY — a sample product list, shipped so you can see what a filled-in table looks like. Not used for scoring.",
+    "items": ["custom coach creation", "avatar upload", "session management", "onboarding", "payment flows", "sign-in", "the main chat screen", "user profile"]
+  }
+}

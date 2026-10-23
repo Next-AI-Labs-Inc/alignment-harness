@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "description": "Registry of artifacts audited for discoverability. Prevents duplicate audit work across sessions. Recompute 'updated' and 'totalAudited' from the 'audited' array itself each time you add an entry — do not hand-type these.",
+    "updated": null,
+    "totalAudited": 0
+  },
+  "audited": [
+    {
+      "slug": "example-tool-or-skill-name",
+      "type": "skill",
+      "auditDate": "YYYY-MM-DD",
+      "surfaces": {
+        "mcp_list_tools": "n/a — not an MCP tool",
+        "skill_triggers": "present — triggers: array with 4 phrases",
+        "tool_registry": "not checked — no registry configured",
+        "memory_search": "not checked — memory search not configured"
+      },
+      "status": "gaps-found",
+      "notes": "Example entry showing the shape of a real audit record. Replace with your own findings; delete this example once you have real entries."
+    }
+  ]
+}

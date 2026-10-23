@@ -1,0 +1,9 @@
+Hey, I would love to calibrate my understanding of you. Here's what I'm thinking: I'll run a command that creates an understanding of your last 200 sessions with a low-cost model (Haiku), and use that abstraction map to prime how to orient to you going forward. That's the simplest initial calibration, and I can do much better... just ask if you want me to go further after that.
+
+Then, as we work together, I'll produce structured data, which is like bits of clear understanding in the moment, and I'll use that to grow my understanding so that I can more predictably understand your intent the moment you speak, over time.
+
+My systems will create a sense of coherence with you, and you can correct anything you see in real time going forward.
+
+First decision: may I run the light self-priming? It uses the last 200 or so sessions, if you have them, inexpensively. If you want, I could show you a sample of the kind of data I'll get before I start, or you can tell me "only grab understanding from conversations about x" and I'll align with that.
+
+Or we skip it, and just be patient as we build our understanding of your intent over time.

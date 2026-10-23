@@ -1,0 +1,1450 @@
+{
+  "_what": "The explicit list of skills this plugin ships. Skills are copied in by this list only, never by folder glob. status: include | held-back. scrub: pending (not yet copied) | mechanical (paths/ids/keys replaced automatically, not yet read by a person or agent) | reviewed (read and fixed by hand: private services behind setup, personal material removed or labelled as an opt-in example). license and origin: set only on a skill adapted from someone else's work; the full notice is in THIRD_PARTY_NOTICES.md.",
+  "approvedFrom": "The 191 skills the author approved for the harness during review, plus harness-setup.",
+  "skills": [
+    {
+      "id": "advisor",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/advisor/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "utils.py"
+      ]
+    },
+    {
+      "id": "agent-debug",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agent-debug/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agent-outcome-summary",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agent-outcome-summary/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agent-ux-verification",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agent-ux-verification/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agentic-actionable-tasks",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agentic-actionable-tasks/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agentic-alignment-optimization",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agentic-alignment-optimization/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agentic-artifact-cache",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agentic-artifact-cache/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agentic-chrome-testing",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agentic-chrome-testing/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "scripts/agent-chrome.js"
+      ]
+    },
+    {
+      "id": "agentic-find",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agentic-find/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agentic-find-how-to-optimize-monthly-maintenence-only",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agentic-find-how-to-optimize-monthly-maintenence-only/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agentic-init",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agentic-init/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agentic-prelaunch-audit",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agentic-prelaunch-audit/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agentic-session-compactions",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agentic-session-compactions/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agentic-tooling-registry",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agentic-tooling-registry/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "agentic-ux-verification",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/agentic-ux-verification/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "align",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/align/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "aligned-build",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/aligned-build/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "alignment-doctor",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/alignment-doctor/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "proof-its-fixed",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/anthropic-proof-its-fixed/SKILL.md",
+      "scrub": "reviewed",
+      "sourceId": "anthropic-proof-its-fixed",
+      "note": "Renamed from anthropic-proof-its-fixed so the name does not suggest Anthropic made it. sourceId is the folder name in the author's own setup."
+    },
+    {
+      "id": "ask",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/ask/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "audit-pre-commit",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/audit-pre-commit/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "batch",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/batch/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "batch-whats-next",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/batch-whats-next/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "blackhat-challenge-proposal",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/blackhat-challenge-proposal/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "calibrate",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/calibrate/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "close",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/close/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "code-principles-how-to-code",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/code-principles-how-to-code/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "coherence-check",
+      "status": "include",
+      "source": "plugin",
+      "sourcePath": "~/.claude/skills/coherence-check/SKILL.md",
+      "scrub": "reviewed",
+      "note": "Generated from prompts/coherence-ritual.txt (the same text the UserPromptSubmit hook injects) by scripts/build-coherence-skill.js, so hook and skill cannot drift."
+    },
+    {
+      "id": "commit",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/commit/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "commit2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/commit2/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "communicate-what-you-finished",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/communicate-what-you-finished/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "communication-pattern-validated",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/communication-pattern-validated/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "compact-agentic-session",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/compact-agentic-session/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "compact-from-transcript",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/compact-from-transcript/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "compactions-enrich",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/compactions-enrich/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "complete-agentic-task",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/complete-agentic-task/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "complete-seed",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/complete-seed/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "compose-domain-knowledge-article",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/compose-domain-knowledge-article/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "consume",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/consume/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "contribute",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/contribute/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "references/atomic-work-products.md",
+        "references/branch-and-pr-template.md",
+        "references/micro-agent-briefs.md"
+      ]
+    },
+    {
+      "id": "conversation-miner",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/conversation-miner/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "declare-scope",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/declare-scope/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "decompose",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/decompose/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "decompose-nested-intent-from-transcript",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/decompose-nested-intent-from-transcript/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "deploy-alignment-guardian",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/deploy-alignment-guardian/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "devtools-site-testing",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/devtools-site-testing/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "discoverability-audit-learnings-findable-by-agents",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/discoverability-audit-learnings-findable-by-agents/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "audit-registry.json"
+      ]
+    },
+    {
+      "id": "dispatch-seed",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/dispatch-seed/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "enrich-all-compactions",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/enrich-all-compactions/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "error-fix-safety-eval",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/error-fix-safety-eval/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "execute",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/execute/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "execute2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/execute2/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "expand-perspective",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/expand-perspective/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "extract-completions-for-log",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/extract-completions-for-log/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "extract-wip-from-past-sessions",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/extract-wip-from-past-sessions/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "feature-completion-ux-test",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/feature-completion-ux-test/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "AGENT_GUIDE.md"
+      ]
+    },
+    {
+      "id": "feature-measurement-workflow",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/feature-measurement-workflow/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "fix-algo-bug-determine-if-auto-fix-ok",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/fix-algo-bug-determine-if-auto-fix-ok/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "fix-hallucinated-code-cleanup-source",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/fix-hallucinated-code-cleanup-source/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "flywheel-consultant",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/flywheel-consultant/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "founder-knowledge-store",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/founder-knowledge-store/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "founder-voice-email-writing",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/founder-voice-email-writing/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "founder-watchable-canonical",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/founder-watchable-canonical/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "gap",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/gap/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "gate",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/gate/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "genome-experiment",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/genome-experiment/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "governer",
+      "status": "include",
+      "source": "plugin",
+      "sourcePath": "~/.claude/skills/governer/SKILL.md",
+      "scrub": "reviewed",
+      "note": "Rewritten for the plugin per docs/build/governer.md: local scorer, score written to session state, unscored-not-50, uncalibrated label, skill prediction degrades openly."
+    },
+    {
+      "id": "governer-adaptive-score-consumer-guide",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/governer-adaptive-score-consumer-guide/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "governer2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/governer2/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "hallucination",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/hallucination/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "how-to-bulk-register-atomic-tools",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/how-to-bulk-register-atomic-tools/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "how-to-create-or-update-skill-files",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/how-to-create-or-update-skill-files/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "how-to-create-or-update-skill-files-2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/how-to-create-or-update-skill-files-2/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "how-to-name-things",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/how-to-name-things/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "how-to-submit-and-track-proposals",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/how-to-submit-and-track-proposals/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "how-to-talk-like-the-founder",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/how-to-talk-like-the-founder/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "how-to-write-meta-analysis-docs",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/how-to-write-meta-analysis-docs/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "incomplete",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/incomplete/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "extract_transcript.py",
+        "run_extract.sh"
+      ]
+    },
+    {
+      "id": "incomplete-tasks-get-from-session",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/incomplete-tasks-get-from-session/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "extract_transcript.py",
+        "run_extract.sh"
+      ]
+    },
+    {
+      "id": "incomplete2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/incomplete2/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "info",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/info/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "infuse",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/infuse/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "init",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/init/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "initiative-playground",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/initiative-playground/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "insight",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/insight/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "bin/oracle-locate.sh"
+      ]
+    },
+    {
+      "id": "instinct-harvest",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/instinct-harvest/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "examples/example-item.md",
+        "scripts/build-instinct-index.js",
+        "scripts/extract-check-pairs.js",
+        "scripts/lib.js",
+        "scripts/mining-status.js",
+        "scripts/verify-instinct-quotes.js"
+      ]
+    },
+    {
+      "id": "intent",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "intent-alignment-audit",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent-alignment-audit/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "intent-alignment-audit.js"
+      ]
+    },
+    {
+      "id": "intent-architect",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent-architect/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "intent-audit-and-repair",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent-audit-and-repair/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "intent-db",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent-db/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "intent.js"
+      ]
+    },
+    {
+      "id": "intent-journey-documentation-v2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent-journey-documentation-v2/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "intent-leverage-audit",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent-leverage-audit/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "intent-lifecycle",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent-lifecycle/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "intent-map-docs-add",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent-map-docs-add/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "intent-map-domain-synthesis",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent-map-domain-synthesis/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "intent-nested",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent-nested/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "intent-validation-engine",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/intent-validation-engine/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "investigate-error",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/investigate-error/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "ix-sila-leverage-scoring",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/ix-sila-leverage-scoring/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "jonathan-check",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/jonathan-check/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "jonathan-check2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/jonathan-check2/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "jonathan-check3",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/jonathan-check3/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "knowledge-atom-extraction",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/knowledge-atom-extraction/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "leverage-predictor",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/leverage-predictor/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "log-new-mems-in-swarm",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/log-new-mems-in-swarm/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "scripts/save-memory.js",
+        "scripts/search-memory.js"
+      ]
+    },
+    {
+      "id": "until-proven-done",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/loop/SKILL.md",
+      "scrub": "reviewed",
+      "sourceId": "loop",
+      "note": "Renamed from loop so it does not collide with Claude Code's built-in /loop. sourceId is the folder name in the author's own setup."
+    },
+    {
+      "id": "multi-tier-audit-pipeline",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/multi-tier-audit-pipeline/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "nested-intent",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/nested-intent/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "nested-intent2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/nested-intent2/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "next-priority-tasks",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/next-priority-tasks/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "on-agent-getting-stuck",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/on-agent-getting-stuck/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "on-complete-all-queued-tasks",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/on-complete-all-queued-tasks/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "on-scope-change",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/on-scope-change/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "on-talking-about-code",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/on-talking-about-code/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "on-turn-end",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/on-turn-end/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "oracle-pre-query",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/oracle-pre-query/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "oracles",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/oracles/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "orchestrator",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/orchestrator/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "pipeline-adversarial-design",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/pipeline-adversarial-design/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "pipeline-compliance-audit",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/pipeline-compliance-audit/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "pipeline-consumption-handoff",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/pipeline-consumption-handoff/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "pipeline-cross-verify",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/pipeline-cross-verify/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "pipeline-idea-generator",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/pipeline-idea-generator/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "pipeline-scope-guardian",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/pipeline-scope-guardian/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "pipeline-ux-verify",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/pipeline-ux-verify/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "playwright-validator",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/playwright-validator/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "predict-next-action",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/predict-next-action/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "predict-next-action2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/predict-next-action2/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "predict-required-skills",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/predict-required-skills/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "predict-required-skills2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/predict-required-skills2/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "principle-alignment-scanner-workflow",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/principle-alignment-scanner-workflow/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "process-actionable",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/process-actionable/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "proposal-ground",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/proposal-ground/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "proposal-schema",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/proposal-schema/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "propose",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/propose/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "propose-runner",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/propose-runner/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "rapid-fire-testing",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/rapid-fire-testing/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "reflect",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/reflect/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "research",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/research/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "resolve-proposals",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/resolve-proposals/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "respond-to-direct-question",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/respond-to-direct-question/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "review-proposal",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/review-proposal/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "review-proposal-greenlight",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/review-proposal-greenlight/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "run-discoverability-audit",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/run-discoverability-audit/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "sanity-check",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/sanity-check/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "seed",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/seed/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "seed-company",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/seed-company/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "session-reminder",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/session-reminder/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "session-titles-name",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/session-titles-name/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "show-proof-to-human",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/show-proof-to-human/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "skill-creator",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/skill-creator/SKILL.md",
+      "scrub": "reviewed",
+      "license": "Apache-2.0",
+      "origin": "Modified version of the skill-creator skill in Anthropic's claude-plugins-official marketplace (Apache License 2.0). See THIRD_PARTY_NOTICES.md."
+    },
+    {
+      "id": "skill-extractor",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/skill-extractor/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "skill-file-create-pre-check-self-healing-protocol",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/skill-file-create-pre-check-self-healing-protocol/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "smc",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/smc/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "smc-consumption-prompt",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/smc-consumption-prompt/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "smc-evaluator",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/smc-evaluator/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "smc-frustration-detector",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/smc-frustration-detector/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "scripts/frustration-detector.js"
+      ]
+    },
+    {
+      "id": "smc-prediction-server",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/smc-prediction-server/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "scripts/extract-pairs.js",
+        "scripts/predict.js"
+      ]
+    },
+    {
+      "id": "speak-human",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/speak-human/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "superpowers-use",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/superpowers-use/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "superpowers-writing-plans-v2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/superpowers-writing-plans-v2/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "ALIGNMENT-ADDITIONS.md"
+      ],
+      "license": "MIT",
+      "origin": "PART A adapted from the writing-plans skill in the superpowers plugin by Jesse Vincent (MIT, Copyright (c) 2025 Jesse Vincent). See THIRD_PARTY_NOTICES.md."
+    },
+    {
+      "id": "task-get-one-important",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/task-get-one-important/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "task-orchestrator",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/task-orchestrator/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "tests-failing-check",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/tests-failing-check/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "trace-the-ux",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/trace-the-ux/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "track",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/track/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "track.js"
+      ]
+    },
+    {
+      "id": "ultraplan2",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/ultraplan2/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "unify-obsidian-vaults",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/unify-obsidian-vaults/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "update-the-founder",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/update-the-founder/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "user-state-intent-mapper",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/user-state-intent-mapper/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "ux-assignment-reasoning-protocol",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/ux-assignment-reasoning-protocol/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "ux-criticality-measurement",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/ux-criticality-measurement/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "ux-failure-decomposition",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/ux-failure-decomposition/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "ux-pre-execution-reflection",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/ux-pre-execution-reflection/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "ux-testing-learnings",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/ux-testing-learnings/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "validate-against-live-data",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/validate-against-live-data/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "validate-load-bearing-claims-against-reality",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/validate-load-bearing-claims-against-reality/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "verification-contracts",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/verification-contracts/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "verification-gate",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/verification-gate/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "verify",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/verify/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "verify-ux-assignment-state",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/verify-ux-assignment-state/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "whats-left",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/whats-left/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "work-complete-audit",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/work-complete-audit/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "work-status-report",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/work-status-report/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "workflow-design",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/workflow-design/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "workflow-extract-from-session",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/workflow-extract-from-session/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "workflow-factory",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/workflow-factory/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "workload-status-check",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/workload-status-check/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "worktree-pr-workflow",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/worktree-pr-workflow/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "writing-aligned-user-facing-words",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/writing-aligned-user-facing-words/SKILL.md",
+      "scrub": "reviewed"
+    },
+    {
+      "id": "harness-setup",
+      "status": "include",
+      "source": "plugin",
+      "scrub": "reviewed",
+      "note": "Written for the plugin: the guided first-run setup."
+    },
+    {
+      "id": "calibrate-understanding",
+      "status": "include",
+      "source": "plugin",
+      "scrub": "reviewed",
+      "note": "Written for the plugin: the first-session calibration offer (docs/calibration.md)."
+    },
+    {
+      "id": "harness",
+      "status": "include",
+      "source": "plugin",
+      "scrub": "reviewed",
+      "note": "Written for the plugin: the front door (setup, status, on/off, conflicts, uninstall) per docs/build/init.md."
+    }
+  ],
+  "neverShip": {
+    "_what": "Files that must never be in the package. scripts/scan-private.js fails the build if any of these patterns appear. Raw author writing only ships as examples/author-approved-samples.md after the author explicitly approves a small set.",
+    "patterns": [
+      "**/author-samples*",
+      "**/VERBATIM.md",
+      "**/*.bak*",
+      "**/*.pyc"
+    ]
+  },
+  "heldOutPendingApproval": {
+    "_what": "Author material removed from the package until the author approves a small set for publication. Staged outside the plugin at docs/internal/pending-approval/.",
+    "files": [
+      "how-to-talk-like-the-founder/examples/author-samples.md",
+      "founder-voice-email-writing/examples/author-samples.md",
+      "on-talking-about-code/VERBATIM.md"
+    ]
+  }
+}

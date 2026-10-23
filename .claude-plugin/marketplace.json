@@ -1,0 +1,19 @@
+{
+  "name": "alignment-harness",
+  "owner": {
+    "name": "Next AI Labs, Inc."
+  },
+  "description": "The alignment harness for Claude Code: one plugin that keeps an agent's work tied to what the person actually meant.",
+  "plugins": [
+    {
+      "name": "alignment-harness",
+      "source": "./",
+      "description": "Keeps Claude Code aligned with what you actually meant: coherence check on every message, a per-task risk score every gate reads, and proof before 'done'.",
+      "version": "0.1.0",
+      "author": {
+        "name": "Jonathan Haber"
+      },
+      "license": "MIT"
+    }
+  ]
+}

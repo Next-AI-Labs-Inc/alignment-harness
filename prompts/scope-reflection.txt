@@ -1,0 +1,13 @@
+NEW_SCOPE_IDENTIFIED
+
+Alright! So you identified some possible new scope in what the user stated. Great work. Next, make sure your following response does the following. You're going to attempt to state back that scope in terms that the user will immediately understand, but in a fashion that demonstrates that you get "when" it should happen, what the scope contains, what the intent would be, the overarching intent it serves, and which feels conversational.
+
+Use /speak-human to make sure you get this, and package it up so the human can confirm that you GET IT and that they want it to be acted on or not.
+
+For EACH distinct scope item, prefix it with NEW_SCOPE_1 on a separate line, NEW_SCOPE_2 etc on its own line, followed by a new line and its content so we can verify programmatically that you addressed each one. The number of scopes should match how many distinct scopes you identified.
+
+Print NEW_SCOPE_REFLECTED on its own line BEFORE all scope items to signal adherence programmatically.
+
+Then print HOW you will specifically solve each one with precision and reasoning using /speak-human to convey, and make sure you demonstrate your reasoning on how the action aligns with the intent.  While doing this, under each part of your planning or each load bearing assumption, print your certainty level in % like ( 95% ) for it being aligned and/or true.  If your uncertainty x criticality x complexity ( aka WEIGHT ) is high ( over 70% of baseline ) use /agentic-find about what you're unclear about, then repeat this until your certainty matches the WEIGHT of the task.
+
+After this if your certainty > 85% is right, continue.  If still < 85%, predict the user's next action and seek a green light.

@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Harness Settings</title>
+<!-- Served by lib/settings-server.js on 127.0.0.1 only. Its data is `alignment-harness settings
+     list --json`; every change goes through the same writer as `alignment-harness switch`. -->
+<style>
+  :root {
+    --bg: #f6f5f1; --panel: #ffffff; --panel-2: #fbfaf7; --ink: #1d1f22; --muted: #62676e; --faint: #8b9097;
+    --line: #e3e1da; --accent: #2f5d50; --accent-ink: #ffffff; --accent-soft: #e4eee9; --accent-line: #c9ddd3;
+    --warn: #8a5a12; --warn-soft: #f8efdc; --off: #9a3b2f; --chip: #f1efe9; --health: #f3f7f5; --health-line: #d7e5de;
+    --cli-bg: #1f2326; --cli-ink: #e7e4dc; --cli-prompt: #8fb8a6; --tog-off: #c9c6be;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #17191b; --panel: #1f2225; --panel-2: #23272a; --ink: #e7e4dc; --muted: #a9adb3; --faint: #80858c;
+      --line: #33373b; --accent: #6fb39a; --accent-ink: #10201a; --accent-soft: #1d2b26; --accent-line: #2e4a3f;
+      --warn: #e2b46a; --warn-soft: #33291a; --off: #e08a7c; --chip: #2a2d31; --health: #1d2a25; --health-line: #2e4a3f;
+      --cli-bg: #111315; --tog-off: #4a4e53;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 16px 60px; }
+  header { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 14px; flex-wrap: wrap; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); font-size: 13px; }
+  code, .key { font-family: var(--mono); font-size: 12px; }
+  .key { color: var(--faint); font-weight: 400; }
+  .pathbox { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 12px; color: var(--muted); max-width: 100%; overflow-wrap: anywhere; }
+  .pathbox code { color: var(--ink); }
+  .note { background: var(--accent-soft); border: 1px solid var(--accent-line); border-radius: 10px; padding: 12px 16px; margin: 14px 0 20px; font-size: 13.5px; }
+  .note b { color: var(--accent); }
+  .note .all { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
+  .problem { background: var(--warn-soft); border: 1px solid var(--warn); color: var(--ink); border-radius: 10px; padding: 12px 16px; margin: 14px 0; }
+  .problem b { color: var(--warn); }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 22px 0 8px; font-weight: 600; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 8px; overflow: hidden; }
+  .row { display: grid; grid-template-columns: 18px 1fr auto; gap: 12px; align-items: center; padding: 11px 16px; cursor: pointer; }
+  .row:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .chev { color: var(--faint); font-size: 12px; transition: transform .15s; }
+  .open .chev { transform: rotate(90deg); }
+  .name { font-weight: 600; }
+  .name .key { margin-left: 8px; }
+  .what { color: var(--muted); font-size: 13px; }
+  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 7px; overflow: hidden; font-size: 12.5px; }
+  .seg button { font: inherit; padding: 5px 11px; color: var(--muted); background: var(--panel); border: 0; border-left: 1px solid var(--line); cursor: pointer; }
+  .seg button:first-child { border-left: 0; }
+  .seg button:hover { background: var(--panel-2); }
+  .seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .seg button[aria-pressed="true"].isoff { background: var(--off); color: #fff; }
+  .seg button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .summary { font-size: 12.5px; color: var(--muted); white-space: nowrap; }
+  .badge { display: inline-block; font-size: 11px; padding: 1px 7px; border-radius: 999px; margin-left: 8px; vertical-align: 1px; font-weight: 500; }
+  .badge.warn { background: var(--warn-soft); color: var(--warn); }
+  .badge.ro { background: var(--chip); color: var(--muted); }
+  .open .row { border-bottom: 1px solid var(--line); background: var(--panel-2); }
+  .body { display: none; padding: 14px 16px 16px 46px; grid-template-columns: 1.15fr 1fr; gap: 22px; }
+  .open .body { display: grid; }
+  .row > div, .body > div, .dial > div { min-width: 0; }
+  .body p, .dial .d2, .what { overflow-wrap: anywhere; }
+  .body h3 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent); margin: 0 0 5px; }
+  .body p { margin: 0 0 12px; }
+  .heads { margin: 0 0 12px; padding: 0; list-style: none; }
+  .heads li { margin-bottom: 5px; }
+  .heads code, .chip { background: var(--chip); padding: 1px 5px; border-radius: 4px; color: var(--ink); }
+  .dial { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 8px 0; border-top: 1px dashed var(--line); }
+  .dial:first-of-type { border-top: 0; }
+  .dial .d1 { font-size: 13px; font-weight: 500; }
+  .dial .d2 { font-size: 12px; color: var(--muted); white-space: pre-line; }
+  .dial .d3 { font-size: 12px; color: var(--warn); margin-top: 2px; }
+  .changed { color: var(--accent); font-size: 11px; margin-left: 6px; }
+  select, input[type=number] { font-family: var(--mono); font-size: 12px; border: 1px solid var(--line); border-radius: 6px; padding: 3px 6px; background: var(--panel); color: var(--ink); }
+  input[type=number] { width: 72px; }
+  select { max-width: 170px; }
+  .ro-val { font-family: var(--mono); font-size: 12px; color: var(--muted); max-width: 220px; overflow-wrap: anywhere; text-align: right; }
+  .tog { width: 36px; height: 20px; border-radius: 999px; background: var(--accent); position: relative; display: inline-block; border: 0; cursor: pointer; padding: 0; }
+  .tog::after { content: ""; position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: all .15s; }
+  .tog[aria-checked="false"] { background: var(--tog-off); }
+  .tog[aria-checked="false"]::after { right: 18px; }
+  .tog:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .health { background: var(--health); border: 1px solid var(--health-line); border-radius: 8px; padding: 9px 12px; font-size: 12.5px; margin-bottom: 12px; }
+  .health div + div { margin-top: 4px; }
+  .health small { color: var(--faint); display: block; }
+  .cli { background: var(--cli-bg); color: var(--cli-ink); border-radius: 8px; padding: 9px 12px; font-family: var(--mono); font-size: 12px; margin-bottom: 10px; overflow-x: auto; white-space: nowrap; }
+  .cli span { color: var(--cli-prompt); user-select: none; }
+  a { color: var(--accent); }
+  .ghost { color: var(--faint); font-size: 12px; }
+  .skills { max-height: 360px; overflow-y: auto; border: 1px solid var(--line); border-radius: 8px; padding: 4px 10px; margin-top: 6px; }
+  .skills div { padding: 5px 0; border-top: 1px dashed var(--line); font-size: 12.5px; }
+  .skills div:first-child { border-top: 0; }
+  .filter { width: 100%; font: inherit; padding: 6px 9px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: var(--ink); }
+  #toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); max-width: min(640px, calc(100% - 32px)); background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 9px; font-size: 13px; box-shadow: 0 6px 24px rgba(0,0,0,.18); display: none; }
+  #toast.bad { background: var(--off); color: #fff; }
+  @media (max-width: 760px) {
+    .row { grid-template-columns: 14px 1fr; }
+    .row > :last-child { grid-column: 2; justify-self: start; }
+    .body { grid-template-columns: 1fr; padding-left: 16px; }
+    header { align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Alignment harness: settings</h1>
+      <div class="sub">Every piece, in the order it shows up in a session. Click any row to see what it does for you.</div>
+    </div>
+    <div class="pathbox">Same file your agent reads and writes<br><code id="file">…</code><br>Changes apply from your next message</div>
+  </header>
+
+  <div id="problems"></div>
+
+  <div class="note">
+    <b>About the capitalised headings in replies.</b> COHERENCE_CHECK, ANY_NEW_SCOPE_INDICATED and PENDING_SCOPE are the agent showing you what it understood, in a fixed shape the harness reads back later to learn what you confirmed or corrected. Skim them. If a line is wrong, correct it in one sentence.
+    <div class="all">Everything is on by default. If something gets in your way, try “remind” before “off”. Turning a piece off always lets work through; nothing here can trap you. To turn every piece off at once and keep these settings: <code>claude plugin disable alignment-harness</code></div>
+  </div>
+
+  <main id="app"><p class="ghost">Loading your settings…</p></main>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = '__HARNESS_KEY__';
+  var data = null;
+  var openCards = {};
+  try { (location.hash.slice(1) || '').split(',').forEach(function (k) { if (k) openCards[k] = true; }); } catch (e) { /* none */ }
+
+  function el(tag, attrs, kids) {
+    var n = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === 'text') n.textContent = attrs[k];
+      else if (k === 'cls') n.className = attrs[k];
+      else if (k.slice(0, 2) === 'on') n.addEventListener(k.slice(2), attrs[k]);
+      else n.setAttribute(k, attrs[k]);
+    });
+    (kids || []).forEach(function (c) { if (c !== null && c !== undefined) n.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); });
+    return n;
+  }
+  function setting(name) { return data.settings.filter(function (s) { return s.name === name; })[0]; }
+  function shortKey(name) { return name.split('.').slice(1).join('.'); }
+  function show(v) { return typeof v === 'boolean' ? (v ? 'on' : 'off') : (v === '' ? '(empty)' : String(v)); }
+  var LABELS = { block: 'Block', remind: 'Remind', off: 'Off', 'block-once': 'Once' };
+
+  var toastTimer = null;
+  function toast(msg, isBad) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.className = isBad ? 'bad' : ''; t.style.display = 'block';
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.style.display = 'none'; }, isBad ? 9000 : 4500);
+  }
+
+  function load() {
+    return fetch('/api/settings', { headers: { 'X-Harness-Key': KEY } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { data = d; render(); })
+      .catch(function (e) { document.getElementById('app').textContent = 'Could not load your settings (' + e.message + '). Is `alignment-harness settings` still running? It closes after 30 idle minutes.'; });
+  }
+
+  function change(changes, what) {
+    return fetch('/api/set', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Harness-Key': KEY }, body: JSON.stringify({ changes: changes }) })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (res.list) { data = res.list; render(); }
+        if (res.ok) toast('Saved: ' + what + '. Applies from your next message.');
+        else toast('Not changed: ' + res.error, true);
+      })
+      .catch(function (e) { toast('Not changed: the page could not reach its server (' + e.message + ').', true); });
+  }
+
+  function primaryControl(sec) {
+    var p = sec.primary;
+    if (p && p.strengthKey) {
+      var st = setting(p.strengthKey); var en = p.enabledKey ? setting(p.enabledKey) : null;
+      var current = en && en.value === false ? 'off' : st.value;
+      return el('div', { cls: 'seg', role: 'group', 'aria-label': sec.name }, st.allowed.values.map(function (v) {
+        return el('button', { type: 'button', 'aria-pressed': String(v === current), cls: v === 'off' ? 'isoff' : '', 'data-setting': p.strengthKey, 'data-value': v,
+          onclick: function (ev) {
+            ev.stopPropagation();
+            if (v === current) return;
+            var ch = [];
+            if (v !== 'off' && en && en.value === false) ch.push({ name: en.name, value: true });
+            ch.push({ name: st.name, value: v });
+            change(ch, sec.name + ' is now ' + (LABELS[v] || v));
+          } }, [LABELS[v] || v]);
+      }));
+    }
+    if (p && p.toggleKey) {
+      var t = setting(p.toggleKey);
+      return el('div', { cls: 'seg', role: 'group', 'aria-label': sec.name }, [true, false].map(function (v) {
+        return el('button', { type: 'button', 'aria-pressed': String(t.value === v), cls: v ? '' : 'isoff', 'data-setting': t.name, 'data-value': String(v),
+          onclick: function (ev) { ev.stopPropagation(); if (t.value !== v) change([{ name: t.name, value: v }], sec.name + ' is now ' + (v ? 'on' : 'off')); } }, [v ? 'On' : 'Off']);
+      }));
+    }
+    var bools = sec.settings.map(setting).filter(function (s) { return s.allowed.type === 'boolean'; });
+    var on = bools.filter(function (s) { return s.value; }).length;
+    return el('span', { cls: 'summary' }, [on + ' of ' + bools.length + ' on · open to change']);
+  }
+
+  function dialControl(s, sec) {
+    var a = s.allowed;
+    if (!s.switchableOnPage) return el('span', { cls: 'ro-val', title: 'Change this in the terminal' }, [show(s.value)]);
+    if (a.type === 'boolean') {
+      return el('button', { type: 'button', cls: 'tog', role: 'switch', 'aria-checked': String(!!s.value), 'aria-label': s.label, 'data-setting': s.name,
+        onclick: function () { change([{ name: s.name, value: !s.value }], s.label + ': ' + (!s.value ? 'on' : 'off')); } });
+    }
+    if (a.type === 'enum') {
+      var sel = el('select', { 'aria-label': s.label, 'data-setting': s.name, onchange: function () { change([{ name: s.name, value: sel.value }], s.label + ': ' + sel.value); } },
+        a.values.map(function (v) { var o = el('option', { value: v }, [v]); if (v === s.value) o.setAttribute('selected', ''); return o; }));
+      return sel;
+    }
+    if (a.type === 'integer') {
+      var inp = el('input', { type: 'number', min: String(a.min), max: String(a.max), step: '1', value: String(s.value), 'aria-label': s.label, 'data-setting': s.name });
+      inp.addEventListener('change', function () {
+        var n = Number(inp.value);
+        if (!Number.isInteger(n) || n < a.min || n > a.max) { toast('Not changed: ' + s.label + ' needs a whole number from ' + a.min + ' to ' + a.max + '.', true); inp.value = String(s.value); return; }
+        if (n !== s.value) change([{ name: s.name, value: n }], s.label + ': ' + n);
+      });
+      return inp;
+    }
+    return el('span', { cls: 'ro-val' }, [show(s.value)]);
+  }
+
+  function dial(s, sec) {
+    return el('div', { cls: 'dial' }, [
+      el('div', {}, [
+        el('div', { cls: 'd1' }, [s.label, s.isDefault ? null : el('span', { cls: 'changed', text: '· changed from ' + show(s['default']) })]),
+        el('div', { cls: 'd2' }, [s.whatItDoes || '', ' ', el('span', { cls: 'key', text: shortKey(s.name) })]),
+        s.note ? el('div', { cls: 'd3', text: s.note }) : null,
+      ]),
+      dialControl(s, sec),
+    ]);
+  }
+
+  function docLink(doc, label) {
+    var parts = doc.replace(/^docs\//, '').split('#');
+    return el('a', { href: '/docs/' + parts[0] + '?key=' + KEY + (parts[1] ? '#' + parts[1] : ''), target: '_blank', rel: 'noopener' }, [label || ('Full documentation: ' + doc)]);
+  }
+
+  function card(sec) {
+    var isOpen = !!openCards[sec.key];
+    var settings = sec.settings.map(setting);
+    var p = sec.primary || {};
+    var inRow = [p.strengthKey, p.toggleKey].filter(Boolean);
+    var changedCount = settings.filter(function (s) { return !s.isDefault; }).length;
+    var head = el('div', { cls: 'row', role: 'button', tabindex: '0', 'aria-expanded': String(isOpen), 'data-section': sec.key }, [
+      el('div', { cls: 'chev', 'aria-hidden': 'true' }, ['▸']),
+      el('div', {}, [
+        el('div', { cls: 'name' }, [sec.name, el('span', { cls: 'key', text: sec.key }), changedCount ? el('span', { cls: 'badge warn', text: changedCount + ' changed from default' }) : null]),
+        el('div', { cls: 'what', text: sec.what }),
+      ]),
+      primaryControl(sec),
+    ]);
+    function toggle() { openCards[sec.key] = !openCards[sec.key]; try { history.replaceState(null, '', '#' + Object.keys(openCards).filter(function (k) { return openCards[k]; }).join(',')); } catch (e) { /* fine */ } render(); }
+    head.addEventListener('click', toggle);
+    head.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target === head) { e.preventDefault(); toggle(); } });
+
+    var left = el('div', {}, [
+      el('h3', { text: 'What this does for you' }), el('p', { text: sec.forYou }),
+      el('h3', { text: 'If you turn it off' }), el('p', { text: sec.ifOff }),
+      sec.headings.length ? el('h3', { text: 'The headings it prints, and why they stay' }) : null,
+      sec.headingsWhy ? el('p', { text: sec.headingsWhy }) : null,
+      sec.headings.length ? el('ul', { cls: 'heads' }, sec.headings.map(function (h) { return el('li', {}, [el('code', { text: h[0] }), ' ' + h[1]]); })) : null,
+      docLink(sec.doc),
+    ]);
+    var dials = settings.filter(function (s) { return inRow.indexOf(s.name) < 0; });
+    var example = setting(inRow[0] || sec.settings[0]);
+    var right = el('div', {}, [
+      el('h3', { text: 'Is it working?' }),
+      el('div', { cls: 'health' }, (sec.health.length ? sec.health : [{ text: 'No check for this piece yet.' }]).map(function (h) {
+        return el('div', {}, [h.text, h.fix ? el('small', { text: '→ ' + h.fix }) : null]);
+      })),
+      dials.length ? el('h3', { text: 'Dials' }) : null,
+    ].concat(dials.map(function (s) { return dial(s, sec); })).concat([
+      el('h3', { text: 'Same change from the terminal', style: 'margin-top:12px' }),
+      el('div', { cls: 'cli' }, [el('span', { text: '$ ' }), example ? example.howToChange : '']),
+    ]));
+    return el('div', { cls: 'card' + (isOpen ? ' open' : ''), id: 'card-' + sec.key }, [head, el('div', { cls: 'body' }, [left, right])]);
+  }
+
+  function fixedCard(item) {
+    var k = 'x-' + item.id; var isOpen = !!openCards[k];
+    var head = el('div', { cls: 'row', role: 'button', tabindex: '0', 'aria-expanded': String(isOpen) }, [
+      el('div', { cls: 'chev', 'aria-hidden': 'true' }, ['▸']),
+      el('div', {}, [el('div', { cls: 'name' }, [item.name, el('span', { cls: 'badge ro', text: item.badge })]), el('div', { cls: 'what', text: item.what })]),
+      el('div', { cls: 'ghost', text: 'not switchable here yet' }),
+    ]);
+    function toggle() { openCards[k] = !openCards[k]; render(); }
+    head.addEventListener('click', toggle);
+    head.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+    var left = el('div', {}, [el('h3', { text: 'Why there is no switch here' }), el('p', { text: item.why }), item.doc ? docLink('docs/' + item.doc) : null]);
+    var right = el('div', {}, [
+      item.how ? el('h3', { text: 'The real way to turn it off' }) : null,
+      item.how ? el('div', { cls: 'cli' }, [el('span', { text: '$ ' }), item.how]) : null,
+    ]);
+    if (item.skills) {
+      var box = el('div', { cls: 'skills' });
+      var filter = el('input', { cls: 'filter', type: 'search', placeholder: 'Find a skill by name or what it helps with', 'aria-label': 'Find a skill' });
+      var fill = function () {
+        var q = filter.value.toLowerCase(); box.textContent = '';
+        item.skills.filter(function (s) { return !q || (s.name + ' ' + s.description).toLowerCase().indexOf(q) >= 0; }).forEach(function (s) {
+          box.appendChild(el('div', {}, [el('code', { cls: 'chip', text: '/' + s.name }), ' ' + s.description]));
+        });
+      };
+      filter.addEventListener('input', fill); fill();
+      right.appendChild(el('h3', { text: 'Every skill' })); right.appendChild(filter); right.appendChild(box);
+    }
+    return el('div', { cls: 'card' + (isOpen ? ' open' : '') }, [head, el('div', { cls: 'body' }, [left, right])]);
+  }
+
+  function render() {
+    var focusSel = document.activeElement && document.activeElement.getAttribute('data-setting');
+    document.getElementById('file').textContent = data.switchesFile;
+    var pb = document.getElementById('problems'); pb.textContent = '';
+    (data.problems || []).forEach(function (p) {
+      pb.appendChild(el('div', { cls: 'problem' }, [el('b', { text: 'Running on the defaults until this is fixed. ' }), p, ' Changes here are paused until then, so nothing is written over your file.']));
+    });
+    var app = document.getElementById('app'); app.textContent = '';
+    data.groups.forEach(function (g) {
+      var secs = data.sections.filter(function (s) { return s.group === g.id; });
+      if (!secs.length) return;
+      app.appendChild(el('h2', { text: g.name }));
+      secs.forEach(function (s) { app.appendChild(card(s)); });
+    });
+    app.appendChild(el('h2', { text: 'Not switchable here yet' }));
+    data.notSwitchableHere.forEach(function (x) { app.appendChild(fixedCard(x)); });
+    if (focusSel) { var f = document.querySelector('[data-setting="' + focusSel + '"]'); if (f) f.focus(); }
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

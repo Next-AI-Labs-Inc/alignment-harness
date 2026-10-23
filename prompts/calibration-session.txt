@@ -1,0 +1,35 @@
+You read ONE past Claude Code session between a person and an AI agent, and write down what it teaches about how to understand this person: what they were after, where they corrected the agent, what they lean toward, and what they decided. A later agent will read your notes before working with them, so it understands their intent faster. You are not summarizing the session. You are capturing understanding of the person.
+
+The session is given as lines. Lines starting [U<n> <time>] PERSON: are the person's own words, verbatim. Lines starting [agent ...] are the agent, shortened. Only the PERSON lines are evidence about the person.
+
+Reply with ONE JSON object and nothing else (no prose, no code fence). Shape:
+
+{
+  "target": "what the person was trying to get, in their own terms, one sentence",
+  "initiative": "the larger thing it seemed to serve, one sentence, or null if unclear",
+  "location": "where things stood when the session ended, one sentence",
+  "gap": "what was still open, one sentence, or null",
+  "corrections": [
+    { "situation": "when the agent is about to ...", "agentBelieved": "what the agent had assumed or done", "personMeant": "what the person actually wanted", "lean": "lean toward ...", "why": "the reason or pain behind it, if stated or clearly implied", "quote": "exact words of the person", "ref": "U<n>" }
+  ],
+  "preferences": [
+    { "situation": "when ...", "lean": "lean toward ...", "strength": "hard-lean | lean | slight-lean", "why": "...", "mightNotApply": "when this lean may not hold, or null", "quote": "exact words of the person", "ref": "U<n>" }
+  ],
+  "decisions": [
+    { "decision": "what they chose", "why": "their reason, or null", "quote": "exact words of the person", "ref": "U<n>" }
+  ],
+  "vocabulary": [ { "term": "a word or name the person uses", "means": "what they mean by it" } ],
+  "openQuestions": [ "something about this person's intent that this session left unclear" ],
+  "confidence": 0-100
+}
+
+Rules:
+1. "quote" must be copied character for character from ONE PERSON line, typos included, at most 25 words, and "ref" must name that line. Never tidy their words. If you cannot quote them exactly, set "quote" to null.
+2. Write leans, not rules. "Lean toward checking with you before deleting anything", never "always" or "never" or "must". Put how strongly they hold it in "strength": hard-lean when they insisted or repeated it, slight-lean when it was said once in passing.
+3. A correction is the strongest evidence: the person had to step in. Capture every real one. "agentBelieved" is the wrong belief, written so a reader sees why it looked reasonable.
+4. "situation" says when a future agent would be in this moment, in plain words a newcomer understands. Explain any code name, file or internal label inside the sentence that uses it.
+5. Write every field addressed to the person as "you" ("lean toward checking with you first", "when you ask for a report"), never "he", "she", "they" or "the person": the notes are shown to them.
+6. Take only what this session shows. Do not guess at the person's life, feelings or traits beyond what their words show. No compliments, no judgments of the person.
+7. If the session teaches nothing about the person (a one-line test, a pasted log, an aborted start), reply {"empty": true, "why": "one sentence"}.
+8. Empty lists are fine. Three real items beat ten thin ones.
+9. "confidence" is how sure you are that these notes are right about what the person wanted, 0-100.

@@ -1,0 +1,304 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// Alignment harness — switches and dials
+//
+// This is the ONE file that turns each piece of the harness on or off and sets
+// how hard it pushes. Your own copy lives in the plugin's data folder:
+//   ~/.claude/plugins/data/<alignment-harness id>/switches.jsonc
+// (run `alignment-harness config path` to see the exact path).
+// Edit your copy, not this default. Anything you leave out of your copy falls
+// back to the value here, so new switches added in later versions just work.
+//
+// Everything is ON by default. The harness is meant to be experienced in full;
+// turn a piece down only if it gets in your way, and prefer a dial over "off".
+//
+// Nothing here can trap you: every gate that blocks has a limit after which it
+// only reminds, and any error inside the harness lets your work through.
+// ─────────────────────────────────────────────────────────────────────────────
+{
+  // ── Coherence check (runs on every message you send) ──────────────────────
+  // Before the agent changes anything after you speak, it must first write down
+  // what it thinks you meant, how sure it is, what you need from it, and every
+  // task or complaint it heard. You can correct a misreading in one sentence
+  // before it turns into wrong work.
+  "coherenceGate": {
+    // true = the ritual is asked for and enforced. false = neither.
+    "enabled": true,
+
+    // "block"  = file edits and state-changing commands wait until the agent
+    //            has written the check (reading and searching never wait).
+    // "remind" = the agent is told to do it, but nothing waits.
+    // "off"    = same as enabled: false.
+    "strength": "block",
+
+    // After this many blocks for ONE message, the gate stops blocking and only
+    // reminds. Protects you from an agent that is stuck. 0 = never downgrade.
+    "maxBlocksPerMessage": 3,
+
+    // Which wording of the check to use.
+    //   "control"                = the standard check.
+    //   "per-item-96-escalation" = asks for a certainty % on every single thing
+    //                              the agent claims to understand, and routes
+    //                              anything unclear through /ask (memory first,
+    //                              then a prediction you can confirm at a glance).
+    //   "ab-test"                = pick one of the two at random per session and
+    //                              record which, so you can compare them.
+    "variant": "control",
+
+    // Also show the ritual on automatic "continue" prompts where you didn't
+    // speak. false = only when a person actually sends a message.
+    "forceOnMidExecutionEvents": false,
+
+    // The per-message ritual is sent in a short form that covers every heading;
+    // the full wording lives in the plugin's prompts/ folder and the agent is
+    // pointed to it. true = also paste the full wording every message. Note:
+    // Claude Code shows the model only a short preview of hook output that is
+    // too long, so the full wording may not be seen inline.
+    "injectFullRitualText": false,
+
+    // true = once per session, the agent's attestation only counts after it has
+    // read the full ritual file it is pointed to (a full Read, or `cat`); after
+    // that the short form is enough. Block messages always carry the full
+    // wording. Bounded by maxBlocksPerMessage like every other coherence block.
+    // Not needed (and not asked for) when injectFullRitualText is true.
+    "requireRitualReadOncePerSession": true,
+
+    // true = an attestation (the `attest` command) is refused while the agent's reply so far, as the
+    // transcript shows it, holds no COHERENCE_CHECK: the person has to have been shown the check, not just told
+    // it was attested. If none of the turn's text is visible to the harness (some runtimes record the reply only
+    // after the turn) there is nothing to check and the attestation is accepted. A refusal counts as a block,
+    // so maxBlocksPerMessage still applies. false = trust the attestation, as before.
+    "requirePrintedCheck": true,
+
+    // true = when the check says ANY_NEW_SCOPE_INDICATED = TRUE, the agent restates each scope item
+    // (NEW_SCOPE_REFLECTED, NEW_SCOPE_1 …) before changing anything. Scope scored under 40 with user impact
+    // under 20 flows through; once one scope is routed in a session, later ones refer to that score.
+    // These blocks are counted on their own, with the same limit as maxBlocksPerMessage, so the blocks that
+    // come first on a message can't use the limit up before the restatement is asked for.
+    "requireScopeReflection": true,
+
+    // true = at governer score 80 or more, new scope also needs the agent to name the stakes and print
+    // HIGHEST_LEVERAGE_ACK, and then changing tools wait until you speak again (your next message is the go).
+    // Rescoring the task below 80 ends the wait at once. The acknowledgement block is counted on its own too.
+    "highestLeverageWait": true,
+
+    // Blocks that reach the gate within this many milliseconds of the round's first block count as ONE block.
+    // An agent that fires several edits in one reply is blocked once, not several times, so one parallel batch
+    // can't use up maxBlocksPerMessage and step the gate back. 0 = every blocked call counts on its own.
+    "blockRoundMs": 2000
+  },
+
+  // ── Governer (per-task risk score that every other gate reads) ────────────
+  // Before real work starts, the agent answers in writing what could go wrong
+  // for a real person and how far a mistake would travel. That becomes one
+  // number 0–100. Low numbers get out of the way; high numbers get everything.
+  "governer": {
+    "enabled": true,
+
+    // What the coding gate does when the agent tries to edit files before it
+    // has scored the task with /governer:
+    //   "block"  = wait for a score (one /governer per task), then let it through.
+    //   "remind" = tell the agent to score, but let the edit through.
+    //   "off"    = never check.
+    "gateStrength": "block",
+
+    // After this many blocks in one session, the coding gate only reminds.
+    "maxBlocksPerSession": 3,
+
+    // When two of the three "how dangerous is a mistake here" answers are 8 or
+    // higher, the score is raised to at least this number. The skill text has
+    // always told agents 80; the old server code used 75.
+    "criticalMassFloor": 80,
+
+    // Also write a quick provisional guess on each message (from keywords like
+    // "payment" or "typo"). It is labelled provisional, is shown to the agent
+    // as a hint only, and never loosens any gate.
+    "writeProvisionalBaseline": true,
+
+    // Show the agent the current score and what it means on every message.
+    "injectScoreBanner": true,
+
+    // Apply the coding gate inside subagents too (they share the session's score).
+    "applyToSubagents": true,
+
+    // The skill-prediction step. Needs a notebook of your own skill history;
+    // without one it is skipped and the governer says so.
+    "predictRequiredSkills": {
+      "enabled": true,
+      // A shell command that answers a question on stdin/argument with the
+      // skills to run. Empty = not set up (run /harness-setup to set it up).
+      "oracleCommand": ""
+    }
+  },
+
+  // ── Evidence gate (runs when the agent tries to finish) ───────────────────
+  // If the agent's last message claims something works, passes, is fixed or is
+  // live, and nothing in this turn actually ran it, the agent is sent back to
+  // prove it. Code that was edited but never run is sent back too.
+  "evidenceGate": {
+    "enabled": true,
+
+    // "block" = send the agent back. "remind" = tell it, let it finish. "off".
+    "strength": "block",
+
+    // Apply to subagents finishing their work as well.
+    "applyToSubagents": true,
+
+    // Edited source files but ran nothing at all? Send back when the task's
+    // score is at least this. Unscored tasks are treated as needing proof.
+    "editsNeedProofAtScore": 20,
+
+    // Enforce the per-item verification contract (written with
+    // `alignment-harness contract add`) when the score is at least this.
+    "contractsAtScore": 60,
+
+    // After this many blocks in one session, only remind. (Claude Code's own
+    // loop-break also stops a second block in a row on the same stop.)
+    "maxBlocksPerSession": 6,
+
+    // How sensitive the "you claimed it works" detector is.
+    //   "strict" = every claim family (runtime, fix, tests, deploy, verified,
+    //              high self-scores, functional, operational, savings).
+    //   "normal" = drops high self-scores and savings claims.
+    "claimSensitivity": "strict"
+  },
+
+  // ── Understanding loop extras (UserPromptSubmit) ──────────────────────────
+  "understanding": {
+    // Wrap the person's words in a tag so the agent always knows which part
+    // of the turn is the human speaking.
+    "markHumanMessage": true,
+
+    // When the person says they don't understand the agent ("what are you
+    // talking about", "I don't understand"), tell the agent to run /calibrate
+    // before replying.
+    "calibrateOnConfusion": true,
+
+    // Ask the agent to state what it understood + the resulting experience +
+    // the motive, list who is affected, and check its assumptions. (The
+    // "BEFORE ACTING" line, sent with the coherence check while it is on.)
+    "injectAlignmentQuestions": true,
+
+    // Ask the agent to turn stated requirements into tracked tasks. (The
+    // "TASKS" line, sent with the coherence check while it is on.)
+    "injectTaskTracking": true,
+
+    // Ask for a written verification contract on scored work (score >= 20).
+    "injectVerificationContract": true,
+
+    // Keep a copy of each of your messages (on this machine only) so they can
+    // be re-read word for word after the conversation is compacted.
+    "captureMessagesVerbatim": true,
+
+    // After the conversation is compacted, put those messages back in front of
+    // the agent and ask it to re-read them before continuing.
+    "rehydrateAfterCompaction": true,
+
+    // Optional memory search run on each message. A shell command that takes
+    // the query as its last argument and prints results. Empty = off.
+    // /harness-setup can help you set one up.
+    "memorySearchCommand": ""
+  },
+
+  // ── Scope declaration (the session's record of what it is for) ──────────────
+  // The agent writes its understanding of the task with
+  //   alignment-harness compaction scope --intent "..." --certainty N
+  // and it is shown back on every message, so the work keeps checking itself
+  // against what was agreed.
+  "scope": {
+    "showOnEveryMessage": true,
+    // Below this certainty the agent is told to /reflect, predict the most
+    // likely intent, state it as a proposal, and proceed (never to stall).
+    "certaintyGate": 90
+  },
+
+  // ── Subagents ────────────────────────────────────────────────────────────────
+  "subagents": {
+    // When the agent hands work to a subagent, give the subagent the task's
+    // risk (a quick guess from the real task text, plus the session's own
+    // governer score if there is one) and ask it to state the exact result a
+    // person will experience before it builds anything.
+    "injectAlignmentAtStart": true
+  },
+
+  // ── End of turn: the hand-back ───────────────────────────────────────────────
+  // When a turn did real work, the agent is sent back ONCE (never twice in a
+  // row) to hand the work back well: how to see it, what changed for people,
+  // what's unfinished (/on-turn-end, /complete-agentic-task).
+  "turnEnd": {
+    "enabled": true,
+    // "remind" = if a turn ends without the hand-back, the agent is reminded at the start of its next turn.
+    // It never holds you up ("block-once", the old setting, now means the same). "off" = never.
+    "strength": "remind",
+    // Only for turns scored above this, or turns that edited files without a
+    // score. The /on-turn-end skill uses the same number.
+    "scoreAbove": 40,
+    // Also warn when the person stated requirements ("I want", "it should")
+    // and no task was created for them this turn.
+    "requirementCapture": true
+  },
+
+  // ── Correction patterns ──────────────────────────────────────────────────────
+  // Corrections the person makes more than once become standing directives
+  // (alignment-harness correction add ...). When a turn touches one, the
+  // directive is put in front of the agent at the end of the turn.
+  "correctionPatterns": {
+    "enabled": true,
+    // A pattern becomes active after this many recorded occurrences (or when
+    // the person activates it by hand).
+    "activateAtEvidence": 3,
+    "maxPerTurn": 3
+  },
+
+  // ── Search memory before searching code ─────────────────────────────────────
+  // Once per session, the first code search (Grep, Glob, grep/rg/find) waits
+  // until the agent has searched the project's memory with agent_find — so it
+  // starts from what was already decided instead of guessing from code alone.
+  "intentSearchGate": {
+    // "block-once" = block the first code search of the session, once.
+    // "remind" = only remind. "off".
+    "strength": "block-once"
+  },
+
+  // ── End of session ──────────────────────────────────────────────────────────
+  "sessionEnd": {
+    // If the agent never wrote a record for this session, write an automatic
+    // one (marked auto) from this session's own messages, score and edited
+    // files. It never overwrites a record the agent wrote.
+    "autoCompaction": true,
+    // Note likely corrections in the person's messages ("no, I said …",
+    // "that's not what I asked") as candidate correction patterns to review.
+    "collectCorrectionCandidates": true,
+    // Remove this session's temporary gate files.
+    "cleanUp": true
+  },
+
+  // ── First-session calibration (docs/calibration.md) ──────────────────────
+  "calibration": {
+    // Claude Code deletes sessions older than 30 days by default, which limits
+    // what calibration can learn from. On by default: after the person has
+    // answered the earlier setup questions, the harness asks them one question
+    // about keeping Claude Code's sessions longer, and changes that one setting
+    // (cleanupPeriodDays) only if they say yes to the question they were
+    // actually shown. Set to false to never ask.
+    "offerLongerHistory": true,
+    // How long to offer, in days, when the offer above is on.
+    "longerHistoryDays": 365
+  },
+
+  // ── Logging ────────────────────────────────────────────────────────────────
+  "telemetry": {
+    // Write one line per gate decision to telemetry.jsonl in the data folder.
+    // Stays on your machine. Used by `alignment-harness doctor`.
+    "enabled": true
+  },
+
+  // ── Permission prompts ─────────────────────────────────────────────────────
+  "permissions": {
+    // Let the harness's own bookkeeping commands (attest, score, status, contract add/list/
+    // replace, settings list/get, doctor) run without asking you each time. They only read, or
+    // write inside the harness's data folder. Checks that run your code (contract verify),
+    // removing a check (contract remove), setting changes (switch, settings set), opening the
+    // settings page and setup still follow your normal permission rules.
+    "allowHarnessCommands": true
+  }
+}
