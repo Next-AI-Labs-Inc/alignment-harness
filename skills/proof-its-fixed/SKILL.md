@@ -17,14 +17,14 @@ triggers:
 
 This skill exists because agents declare things "fixed" without evidence, which forces the person you're working with to manually verify every claim. Their time is a constrained resource. An evidence package that proves before/after state programmatically means they can review a fix in 30 seconds instead of 10 minutes — and the proof travels with the fix forever (attached to the commit, the proposal, the report).
 
-Without this: "I fixed the missing reminders" → the person has to go check the database, load the app, test manually.
-With this: "I fixed the missing reminders. Here's the query showing 6 of 40 members with no reminder before, 0 of 40 after. Here's a screenshot of the reminder appearing for a member who previously got nothing." → the person reviews evidence, approves, done.
+Without this: "I fixed the data gap" → the person has to go check the database, load the app, test manually.
+With this: "I fixed the data gap. Here's the DB query showing 9/28 before, 28/28 after. Here's a screenshot of the screen appearing for a user who previously had no data." → the person reviews evidence, approves, done.
 
 ## How to Consume
 
 When you invoke this skill, you are committing to produce THREE types of evidence, in this order:
 
-1. **Narrative proof (THE STORY — always first)** — a human-readable account of what a real person experienced before and after the fix. Written as a story, not as technical documentation. Use an invented first name for the person and a realistic journey; never a real user's name or details. This is what the person reads.
+1. **Narrative proof (THE STORY — always first)** — a human-readable account of what a real person experienced before and after the fix. Written as a story, not as technical documentation. Use a real (or realistic, anonymized) user's name and journey if possible. This is what the person reads.
 2. **Visual proof** — screenshots of the user-facing UX in the broken state and the fixed state. Saved as PNGs. Embedded in the evidence package below the story.
 3. **Programmatic proof** — a runnable script or DB query that demonstrates the broken state (before) and the fixed state (after). Output is structured JSON. This comes LAST, with an explicit bridge paragraph explaining how the data connects to the story above it.
 
@@ -100,7 +100,7 @@ Create `evidence/{finding}-EVIDENCE-PACKAGE.md`:
 
 ### What a person experienced before the fix
 
-{Write this as a narrative, naming a real field or state only to translate it, never to lead with it. Not "the `favoriteClass` field was null" — describe what the person actually saw or didn't see, and why they'd be confused or stuck.}
+{Write this as a narrative, naming a real field or state only to translate it, never to lead with it. Not "the `hasDiscount` field was null" — describe what the person actually saw or didn't see, and why they'd be confused or stuck.}
 
 ### What we changed and why
 
@@ -110,11 +110,11 @@ Create `evidence/{finding}-EVIDENCE-PACKAGE.md`:
 
 {Same narrative style as the "before" section, but now showing the fixed flow.}
 
-#### Worked example (adapted from real work: the app, the person and the numbers were changed)
+#### Worked example (from a reference product — illustrative pattern, replace with your own)
 
-> A member named Priya joined a gym booking app and never picked a favorite class. The app builds its weekly "your spot is held" reminder from the member's favorite class, so for Priya there was nothing to build from, and no reminder was ever sent. She kept showing up on the wrong evenings and missing the classes she meant to book, with no sign anything was supposed to reach her.
+> A person named Carol finished her trial and came back to use the product. She'd only used it a few times during the trial — not enough for the system to build up her personalization data. When she hit her usage limit, nothing happened: no upsell screen appeared. She kept using the free tier indefinitely, with no moment where she was offered the paid plan. The only way she'd ever see an upgrade prompt was if she happened to notice a small banner and clicked it herself — which took her to the annual price, not the discounted first-month offer she should have seen.
 >
-> **What changed:** now a member with no favorite class gets a generic reminder listing the next open classes instead of no reminder at all. It is less tailored, but there is now a message where before there was silence.
+> **What changed:** now when a person hits the usage limit, they see an upsell screen even without personalization data — a generic version of the pitch instead of no pitch at all. Less tailored, but infinitely better than nothing: there is now a conversion moment where before there was zero.
 
 ---
 
@@ -135,9 +135,9 @@ Create `evidence/{finding}-EVIDENCE-PACKAGE.md`:
 > described in the story. The "after" data shows the same query returning
 > {Y different results}, confirming the fix changed the behavior described
 > in the narrative. Specifically, {explain the exact mapping — e.g.,
-> "the 6 members with an empty favoriteClass in the 'before' query are the
-> Priyas: people who would never get a reminder. In the 'after' query,
-> those same members now hit the fallback path and get a generic one."}.
+> "the 19 users with empty salesPitchObject in the 'before' query are the
+> Carols — people who would never see a pitch screen. In the 'after' query,
+> those same users now hit the fallback path and get a conversion moment."}.
 
 ### Before (programmatic)
 ```json

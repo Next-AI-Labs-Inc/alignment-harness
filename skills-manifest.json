@@ -686,6 +686,16 @@
       ]
     },
     {
+      "id": "company-intent-db",
+      "status": "include",
+      "source": "user-skills",
+      "sourcePath": "~/.claude/skills/company-intent-db/SKILL.md",
+      "scrub": "reviewed",
+      "extraFiles": [
+        "company-intent.js"
+      ]
+    },
+    {
       "id": "intent-journey-documentation-v2",
       "status": "include",
       "source": "user-skills",

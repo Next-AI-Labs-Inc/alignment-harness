@@ -27,6 +27,19 @@ const os = require('os');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
+// The harness's own command, found from where this file sits inside the plugin, so the
+// records land in the person's own data folder (where agent_find searches) whether or
+// not `alignment-harness` is on the PATH of the shell the agent runs.
+function harnessCommand() {
+  const roots = [process.env.CLAUDE_PLUGIN_ROOT, path.resolve(__dirname, '..', '..'), path.resolve(__dirname, '..', '..', '..')];
+  for (const root of roots) {
+    if (!root) continue;
+    const bin = path.join(root, 'bin', 'alignment-harness');
+    if (fs.existsSync(bin)) return { file: process.execPath, pre: [bin] };
+  }
+  return { file: 'alignment-harness', pre: [] };
+}
+
 // Default frustration markers — a starting point, not exhaustive. Not
 // everyone shows frustration the same way; edit this list (or the config
 // file it reads from) to match how you actually write when annoyed.
@@ -43,7 +56,7 @@ const DEFAULT_MARKERS = [
 
 function configDir() {
   try {
-    const out = execFileSync('alignment-harness', ['records', 'frustration-detector'], { encoding: 'utf8' }).trim();
+    const out = execFileSync(harnessCommand().file, [...harnessCommand().pre, 'records', 'frustration-detector'], { encoding: 'utf8' }).trim();
     if (out) return out;
   } catch { /* fall through */ }
   const dir = path.join(process.cwd(), '.alignment-harness', 'records', 'frustration-detector');

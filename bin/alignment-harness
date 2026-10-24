@@ -428,7 +428,7 @@ function main() {
         process.stdout.write('usage: store add|list|get|update <kind> ...\n'); return undefined;
       }
       case 'records': {
-        const kind = String(args._[1] || '').replace(/[^A-Za-z0-9_-]/g, '') || 'misc';
+        const kind = require('../lib/store').canonicalKind(args._[1]) || 'misc';
         const dir = path.join(core.P.data, 'records', kind);
         fs.mkdirSync(dir, { recursive: true });
         process.stdout.write(`${dir}\n`);

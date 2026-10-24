@@ -19,6 +19,11 @@ Before redoing work or re-deriving a decision, search what already exists:
 Call it with `agent_find({ query: "..." })` from any tool-calling agent, or run
 `node cli.js "..."` from a shell.
 
+Every result carries a reference (`ref:record:…`, `ref:doc:…`, `ref:session:…`,
+`ref:git:…`, `ref:/skill-name`). Open the whole thing with
+`agent_read({ ref: "..." })`, or `node read-cli.js "..."` from a shell. It reads only
+the places agent_find searches, a page of lines at a time (`offset`, `limit`).
+
 ## Is it set up?
 
 Run this from anywhere:
@@ -99,12 +104,14 @@ matches this query yet.
 
 ## Files
 
-- `server.js` — the MCP stdio server (JSON-RPC 2.0, no SDK). Exposes one tool:
-  `agent_find`.
+- `server.js` — the MCP stdio server (JSON-RPC 2.0, no SDK). Exposes two tools:
+  `agent_find` (search) and `agent_read` (open a result in full by its ref).
 - `cli.js` — the same search, run from a shell. Use this whenever the MCP transport
   is reported down ("Transport closed").
-- `lib/config.js` — resolves the repo list, data folder, records folder, and session
-  transcript folder. The only place any of this is configured.
+- `read-cli.js` — the same as `agent_read`, run from a shell.
+- `lib/read.js` — opens a ref, only inside the places agent_find searches.
+- `lib/config.js` — resolves the repo list, data folder (the same one the hooks use,
+  via `lib/core.js`), records folder, and session transcript folder. The only place any of this is configured.
 - `lib/ranking.js` — the zero-dependency keyword ranking (rarity-weighted term
   coverage + a title/density tiebreak + recency decay). This is the "BM25-style"
   scoring; it needs nothing installed to run.

@@ -4,7 +4,10 @@
 // No SDK, no shipped node_modules, no `npm install` required to run this file — it
 // uses only Node's built-ins plus the zero-dependency search engine in ./lib.
 //
-// Exposes exactly one tool: agent_find({ query, limit?, sources? }).
+// Exposes two tools: agent_find({ query, limit?, sources? }) to search, and
+// agent_read({ ref, offset?, limit? }) to open in full what a result's ref points at.
+// It also carries the Company Intent DB tools (company_intent_search, _get, _list,
+// _propose, _tree) that the company-intent-db skill names, on the person's own data.
 //
 // Protocol notes:
 //   - Every JSON-RPC response goes to stdout, one JSON object per line.
@@ -16,6 +19,8 @@
 const readline = require('readline');
 const { agentFind } = require('./lib/search');
 const { formatResults } = require('./lib/format');
+const { agentRead, formatRead } = require('./lib/read');
+const company = require('./lib/company');
 
 const PROTOCOL_VERSION = '2024-11-05';
 const SERVER_INFO = { name: 'agent-find', version: '0.1.0' };
@@ -27,7 +32,8 @@ const TOOLS = [
       'Search this project\'s institutional memory: markdown docs and git commits in ' +
       'the configured repo(s), past Claude Code sessions for this project, this ' +
       'harness\'s local records, and this plugin\'s own skills. Use it before ' +
-      're-deriving something that may already be decided or documented.',
+      're-deriving something that may already be decided or documented. Each ' +
+      'result carries a ref; open the whole thing with agent_read.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -42,6 +48,24 @@ const TOOLS = [
       required: ['query'],
     },
   },
+  {
+    name: 'agent_read',
+    description:
+      'Open, in full, something agent_find found. Pass the ref printed beside a ' +
+      'result (for example record:compactions/session-….json, doc:my-repo/docs/plan.md, ' +
+      'session:<id>, git:my-repo:<hash> or /skill-name). Long things come back a page ' +
+      'of lines at a time; use offset to continue.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        ref: { type: 'string', description: 'The ref agent_find printed beside a result (with or without the leading "ref:").' },
+        id: { type: 'string', description: 'Same as ref; accepted so agent_read({ id }) works too.' },
+        offset: { type: 'number', description: 'First line to return, counting from 0 (default 0).' },
+        limit: { type: 'number', description: 'How many lines to return (default 200, max 1000).' },
+      },
+    },
+  },
+  ...company.TOOLS,
 ];
 
 function send(obj) {
@@ -59,18 +83,25 @@ function fail(id, code, message) {
 async function handleToolsCall(id, params) {
   const name = params && params.name;
   const args = (params && params.arguments) || {};
-  if (name !== 'agent_find') {
+  if (name !== 'agent_find' && name !== 'agent_read' && !company.NAMES.has(name)) {
     fail(id, -32602, `Unknown tool: ${name}`);
     return;
   }
   let text;
   try {
-    const result = await agentFind(args.query, { limit: args.limit, sources: args.sources });
-    text = formatResults(result);
+    if (name === 'agent_find') {
+      const result = await agentFind(args.query, { limit: args.limit, sources: args.sources });
+      text = formatResults(result);
+    } else if (company.NAMES.has(name)) {
+      text = company.run(name, args);
+    } else {
+      const result = await agentRead(args.ref !== undefined ? args.ref : args.id, { offset: args.offset, limit: args.limit });
+      text = formatRead(result);
+    }
   } catch (err) {
-    // Fails open: a search error becomes a plain-language message, never a crash and
+    // Fails open: an error becomes a plain-language message, never a crash and
     // never a thrown JSON-RPC error that would look like the TOOL is broken.
-    text = `agent_find hit an internal error and returned no results: ${err && err.message ? err.message : 'unknown error'}.`;
+    text = `${name} hit an internal error and returned nothing: ${err && err.message ? err.message : 'unknown error'}.`;
   }
   ok(id, { content: [{ type: 'text', text }] });
 }

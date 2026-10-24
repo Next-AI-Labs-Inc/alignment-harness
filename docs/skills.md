@@ -9,7 +9,7 @@ Skills are copied in by an explicit list (`skills-manifest.json`), never by fold
 Names were kept as they are in the author's setup, even where they name him (`jonathan-check*`, `*-founder`, `founder-*`). Other skills and hooks call them by those names, and a working harness matters more than tidier names. Inside, "the founder" and "Jonathan" mean the person you're working with, which is you.
 
 ## Is it set up?
-As of 2026-10-16: 194 skills ship. Review state: 194 reviewed. ("reviewed" = read and fixed by hand; "mechanical" = placeholders applied, read-through not recorded yet.)
+As of 2026-10-23: 195 skills ship. Review state: 195 reviewed. ("reviewed" = read and fixed by hand; "mechanical" = placeholders applied, read-through not recorded yet.)
 
 ## Is it working?
 In Claude Code, type `/alignment-harness:` and the list appears. `claude plugin details alignment-harness` shows the inventory and its token cost.
@@ -51,6 +51,7 @@ In Claude Code, type `/alignment-harness:` and the list appears. `claude plugin 
 | `compact-agentic-session` | reviewed | Create and consume agent session compactions for cross-session continuity. Use when capturing or retrieving intent. |
 | `compact-from-transcript` | reviewed | Create a full-quality session compaction from an uncompacted Claude Code session transcript. Uses signal extraction to strip noise, then invokes /reflect + /align, then writes the record locally (or to your own store,… |
 | `compactions-enrich` | reviewed | Enrich session compactions with structured reflection, intent alignment, leverage scoring, and incomplete task extraction. Use when enriching existing compactions post-hoc, when running batch enrichment across all ses… |
+| `company-intent-db` | reviewed | Query or document company-level strategic intentions. Use when reading or writing company mission or pricing philosophy. |
 | `complete-agentic-task` | reviewed | Run the mandatory completion protocol before returning control. Use when finishing any substantive piece of work. |
 | `complete-seed` | reviewed | Agent-invoked completion gate. When an agent believes its work is done, this skill forces it to collect evidence — load the page, grab screenshots, run verification commands from the seed's success criteria. The agent… |
 | `compose-domain-knowledge-article` | reviewed | Create a Wikipedia-style domain knowledge article in the project's own knowledge base. Use when documenting a part of the person's work, capturing institutional knowledge, or building a knowledge base at <project>/doc… |

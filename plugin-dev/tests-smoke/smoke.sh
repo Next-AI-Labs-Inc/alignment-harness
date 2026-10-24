@@ -640,6 +640,83 @@ printf '{"session_id":"%s","prompt":"please change how the subscription is charg
 printf '{"session_id":"%s","transcript_path":"%s","tool_name":"Edit","tool_input":{"file_path":"/x.js"}}' "$NCS" "$TMP/$NCS.jsonl" | CLAUDE_PLUGIN_ROOT="$NC" CLAUDE_PLUGIN_DATA="$NCD" bash "$NC/hooks/run.sh" pre-tool >/dev/null 2>&1
 [ $? -eq 2 ] && ok "with config/ deleted, an edit before the coherence check is still held (the gates really use the built-in defaults)" || bad "gate did not hold with config/ deleted"
 
+echo "agent_find and agent_read: a session becomes a record, the search finds it, the ref opens it in full (person's own data only)"
+# A stranger's layout: the data folder lives under their own Claude config folder, and the CLI fallback is run
+# from Bash, which has no CLAUDE_PLUGIN_DATA. Ids are placeholder-shaped.
+AFC="$TMP/afcfg"; AFD="$AFC/plugins/data/alignment-harness-alignment-harness"; AFW="$TMP/afwork"; mkdir -p "$AFC/projects" "$AFW"
+AFS=ffffffff-aaaa-bbbb-cccc-aaaaaaaaaaaa; AFT="$TMP/af-transcript.jsonl"
+printf '%s\n' '{"type":"user","timestamp":"2026-10-23T10:00:00Z","message":{"role":"user","content":"Please fix the invoice rounding bug so totals use banker rounding"}}' '{"type":"assistant","timestamp":"2026-10-23T10:01:00Z","message":{"role":"assistant","content":[{"type":"text","text":"On it."},{"type":"tool_use","name":"Edit","input":{"file_path":"'"$AFW"'/invoice.js"}}]}}' > "$AFT"
+printf '{"session_id":"%s","prompt":"Please fix the invoice rounding bug so totals use banker rounding","cwd":"%s","transcript_path":"%s"}' "$AFS" "$AFW" "$AFT" | CLAUDE_PLUGIN_DATA="$AFD" bash "$ROOT/hooks/run.sh" user-prompt >/dev/null 2>&1
+printf '{"session_id":"%s","cwd":"%s","transcript_path":"%s","reason":"other"}' "$AFS" "$AFW" "$AFT" | CLAUDE_PLUGIN_DATA="$AFD" bash "$ROOT/hooks/run.sh" session-end >/dev/null 2>&1
+AFREC="$AFD/records/compactions/session-$AFS.json"
+[ -f "$AFREC" ] && grep -q "banker rounding" "$AFREC" && ok "session end wrote a record of the session into the person's own data folder" || bad "no record written at session end: $(ls "$AFD/records" 2>&1 | head -2)"
+# the real MCP server, over stdio
+afmcp() { # $1 = tool, $2 = arguments JSON
+  printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' "{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"$1\",\"arguments\":$2}}" \
+    | ( cd "$AFW" && CLAUDE_PLUGIN_DATA="$AFD" CLAUDE_CONFIG_DIR="$AFC" node "$ROOT/mcp/agent-find/server.js" ) > "$TMP/af-mcp.out" 2>/dev/null
+}
+afmcp agent_find '{"query":"what did we decide about rounding on invoices","sources":["record"]}'
+node -e 'const L=require("fs").readFileSync(process.argv[1],"utf8").trim().split("\n").map(JSON.parse);
+const names=L.find(m=>m.id===2).result.tools.map(t=>t.name).sort().join(",");
+const txt=L.find(m=>m.id===3).result.content[0].text;
+require("fs").writeFileSync(process.argv[2],names+"\n"+txt);' "$TMP/af-mcp.out" "$TMP/af-find.txt"
+head -1 "$TMP/af-find.txt" | tr , "\n" | grep -qx agent_find && head -1 "$TMP/af-find.txt" | tr , "\n" | grep -qx agent_read && ok "the server offers both agent_find and agent_read" || bad "tools offered: $(head -1 "$TMP/af-find.txt")"
+grep -q "ref:record:compactions/session-$AFS.json" "$TMP/af-find.txt" && ok "agent_find returns the session's record for a related question, with a ref" || bad "agent_find missed the record: $(sed -n 2,6p "$TMP/af-find.txt")"
+AFREF="record:compactions/session-$AFS.json"
+afmcp agent_read "{\"ref\":\"ref:$AFREF\"}"
+node -e 'const L=require("fs").readFileSync(process.argv[1],"utf8").trim().split("\n").map(JSON.parse);process.stdout.write(L.find(m=>m.id===3).result.content[0].text)' "$TMP/af-mcp.out" > "$TMP/af-read.txt"
+grep -q "## compactedSession" "$TMP/af-read.txt" && grep -q "Please fix the invoice rounding bug" "$TMP/af-read.txt" && grep -q "Files edited (1): invoice.js" "$TMP/af-read.txt" && ok "agent_read opens the full record by the ref agent_find printed" || bad "agent_read did not return the full record: $(head -5 "$TMP/af-read.txt")"
+# the CLI fallback: no CLAUDE_PLUGIN_DATA, only the person's Claude config folder
+out=$(cd "$AFW" && env -u CLAUDE_PLUGIN_DATA -u ALIGNMENT_HARNESS_DATA CLAUDE_CONFIG_DIR="$AFC" node "$ROOT/mcp/agent-find/cli.js" "rounding on invoices" --sources record 2>&1)
+[[ "$out" == *"ref:$AFREF"* ]] && ok "the CLI fallback finds the same record without CLAUDE_PLUGIN_DATA" || bad "CLI fallback could not see the record: ${out:0:200}"
+out=$(cd "$AFW" && env -u CLAUDE_PLUGIN_DATA -u ALIGNMENT_HARNESS_DATA CLAUDE_CONFIG_DIR="$AFC" node "$ROOT/mcp/agent-find/read-cli.js" "$AFREF" --limit 3 2>&1)
+[[ "$out" == *"lines 1-3 of"* && "$out" == *"[more: agent_read("* ]] && ok "read-cli opens it a page at a time and says how to continue" || bad "read-cli paging: ${out:0:200}"
+# a ref can only reach the person's own material
+echo "TOP-SECRET-OUTSIDE" > "$TMP/af-secret.txt"
+REL=$(node -e 'console.log(require("path").relative(process.argv[1], process.argv[2]))' "$AFD/records" "$TMP/af-secret.txt")
+leak=""
+for bad_ref in "record:$REL" "record:$TMP/af-secret.txt" "doc:afwork/../af-secret.txt" "skill:../../af-secret" "session:../../../af-secret" "git:afwork:--output=$TMP/af-pwned"; do
+  o=$(cd "$AFW" && CLAUDE_CONFIG_DIR="$AFC" node "$ROOT/mcp/agent-find/read-cli.js" "$bad_ref" 2>&1)
+  [[ "$o" == *TOP-SECRET-OUTSIDE* ]] && leak="$leak $bad_ref"
+  [[ "$o" == agent_read:* ]] || leak="$leak (no plain refusal for $bad_ref)"
+done
+[ -z "$leak" ] && [ ! -e "$TMP/af-pwned" ] && ok "refs with .., absolute paths or git options open nothing and say so in a sentence" || bad "a ref reached outside the person's material:$leak"
+out=$(cd "$AFW" && CLAUDE_CONFIG_DIR="$AFC" node "$ROOT/mcp/agent-find/read-cli.js" 12345 2>&1)
+[[ "$out" == *"numeric id"* ]] && ok "a numbered artifact id is answered with where to get a real ref, not an error" || bad "numeric id: ${out:0:160}"
+# the memory-search commands never count as proof that something was run
+node -e 'const {withoutHarnessCommands:w}=require(process.argv[1]+"/lib/commands");
+process.exit(w("node \""+process.argv[1]+"/mcp/agent-find/read-cli.js\" \"record:x\"").trim()==="" ? 0 : 1)' "$ROOT" && ok "reading a record is not counted as evidence that work was verified" || bad "read-cli.js counted as proof"
+
+echo "intent DB and company intents: a person can keep their own, and agent_find finds them (no alignment-harness on PATH)"
+# Same stranger layout as above; the skill scripts must find the harness's own command from where they sit.
+IC="$TMP/iccfg"; ID="$IC/plugins/data/alignment-harness-alignment-harness"; IW="$TMP/icwork"; mkdir -p "$IC" "$ID" "$IW"
+icrun() { ( cd "$IW" && env -u CLAUDE_PLUGIN_DATA -u ALIGNMENT_HARNESS_DATA -u CLAUDE_PLUGIN_ROOT PATH="/usr/bin:/bin:$(dirname "$(command -v node)")" CLAUDE_CONFIG_DIR="$IC" "$@" ) 2>&1; }
+icrun node "$ROOT/skills/intent-db/intent.js" create '{"slug":"checkout.no-double-charge","title":"No double charge at checkout","primaryIntent":"When a person clicks Pay twice, they are charged once"}' >/dev/null
+icrun node "$ROOT/skills/intent-db/intent.js" approve checkout.no-double-charge >/dev/null
+[ -f "$ID/records/intents/checkout.no-double-charge.json" ] && [ ! -e "$IW/.alignment-harness" ] && ok "an intent lands in the person's data folder, not in their project, with the command off the PATH" || bad "intent landed elsewhere: $(find "$TMP" -name 'checkout.no-double-charge.json' | head -2)"
+out=$(icrun node "$ROOT/mcp/agent-find/cli.js" "clicked pay twice" --sources record)
+[[ "$out" == *"ref:record:intents/checkout.no-double-charge.json"* ]] && ok "agent_find finds the person's own intent" || bad "agent_find missed the intent: ${out:0:200}"
+out=$(icrun node "$ROOT/skills/company-intent-db/company-intent.js" propose '{"slug":"pricing-philosophy","title":"Pricing philosophy","primaryIntent":"We charge for the result a team gets, not for seats","category":"pricing","tags":["canonical"],"certaintyScore":90,"proposedBy":"claude-agent"}')
+[[ "$out" == *"cannot exceed 50"* ]] && [ ! -e "$ID/records/company-intent/pricing-philosophy.json" ] && ok "an agent cannot propose a company intent above certainty 50" || bad "certainty cap: ${out:0:200}"
+icrun node "$ROOT/skills/company-intent-db/company-intent.js" propose '{"slug":"pricing-philosophy","title":"Pricing philosophy","primaryIntent":"We charge for the result a team gets, not for seats","category":"pricing","tags":["canonical"],"certaintyScore":45,"proposedBy":"claude-agent"}' >/dev/null
+out=$(icrun node "$ROOT/skills/company-intent-db/company-intent.js" find "result a team")
+[[ "$out" == *"(0 results)"* ]] && ok "a proposed company intent stays out of search until the person approves it" || bad "proposal showed before approval: ${out:0:160}"
+icrun node "$ROOT/skills/company-intent-db/company-intent.js" approve pricing-philosophy >/dev/null
+out=$(icrun node "$ROOT/skills/company-intent-db/company-intent.js" find "result a team")
+[[ "$out" == *"pricing-philosophy"* ]] && ok "once approved, the company-intent-db command finds it" || bad "approved company intent not found: ${out:0:160}"
+icrun node "$ROOT/bin/alignment-harness" store add company-intent --json '{"slug":"growth-strategy","title":"Growth strategy","primaryIntent":"We grow through teams recommending us","category":"growth","tags":["growth"],"status":"approved"}' >/dev/null
+[ -f "$ID/records/company-intent/growth-strategy.json" ] && ok "store add company-intent names the file by its slug, the same file the skill's command uses" || bad "store add company-intent file: $(ls "$ID/records/company-intent" 2>&1)"
+a=$(icrun node "$ROOT/bin/alignment-harness" records company-intent); b=$(icrun node "$ROOT/bin/alignment-harness" records company-intents)
+[ "$a" = "$b" ] && ok "records company-intent and records company-intents are one folder" || bad "two company-intent folders: $a vs $b"
+printf '%s\n' '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}' '{"jsonrpc":"2.0","id":2,"method":"tools/list"}' '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"company_intent_search","arguments":{"query":"teams"}}}' '{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"agent_find","arguments":{"query":"how do we charge small teams","sources":["record"]}}}' \
+  | ( cd "$IW" && CLAUDE_PLUGIN_DATA="$ID" CLAUDE_CONFIG_DIR="$IC" node "$ROOT/mcp/agent-find/server.js" ) > "$TMP/ic-mcp.out" 2>/dev/null
+node -e 'const L=require("fs").readFileSync(process.argv[1],"utf8").trim().split("\n").map(JSON.parse);
+const names=L.find(m=>m.id===2).result.tools.map(t=>t.name);
+const need=["company_intent_search","company_intent_get","company_intent_list","company_intent_propose","company_intent_tree"];
+const s=L.find(m=>m.id===3).result.content[0].text, f=L.find(m=>m.id===4).result.content[0].text;
+process.exit(need.every(n=>names.includes(n)) && s.includes("growth-strategy") && f.includes("ref:record:company-intent/pricing-philosophy.json") ? 0 : 1)' "$TMP/ic-mcp.out" \
+  && ok "the server's company_intent tools and agent_find both reach the person's company intents" || bad "company intent tools: $(head -c 300 "$TMP/ic-mcp.out")"
+
 rm -rf "$TMP"
 echo; echo "smoke: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

@@ -13,7 +13,7 @@ triggers:
 
 The jonathan-check2 oracle is trained on 8,500+ conversations that are predominantly product-UX work. When asked to evaluate agent infrastructure, data pipelines, or other non-product work, it defaults to its strongest patterns (simulator URLs, Silver Grail ROI, customer-facing UX) which may not apply.
 
-This protocol was born from a real failure: an oracle query about agent infrastructure hooks returned a large share of misapplied product patterns because the query didn't frame the domain. Adding a structured pre-check reduced misapplication to a small share.
+This protocol was born from a real failure: an oracle query about agent infrastructure hooks returned 50% misapplied product patterns because the query didn't frame the domain. Adding a structured pre-check reduced misapplication to ~11%.
 
 ## When to Use
 

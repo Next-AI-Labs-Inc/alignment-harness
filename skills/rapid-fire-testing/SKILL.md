@@ -70,7 +70,7 @@ Before doing anything else, ask: **what is the smallest possible artifact that, 
 Examples:
 - `T - automate facebook customer service` → the smallest proof is **one real reply sent back to one real message in Facebook Marketplace**. Not a perfect reply. Not a polished system. One message, sent.
 - `T - create videos with this new Claude tool` → the smallest proof is **one actually-generated video, relevant to the user's domain, that the user can watch right now**.
-- `T - automate cold outreach to a specific kind of business` → the smallest proof is **one personalized outreach message generated from a real prospect's public data**, not a sent message (that would require alignment first).
+- `T - automate cold outreach to family offices` → the smallest proof is **one personalized outreach message generated from a real prospect's public data**, not a sent message (that would require alignment first).
 
 The evidence point is whatever, when seen by the user, will give them enough signal to say "keep going" or "kill it."
 

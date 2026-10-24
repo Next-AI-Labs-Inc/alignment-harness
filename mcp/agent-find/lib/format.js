@@ -46,6 +46,11 @@ function formatResults(result) {
     lines.push('');
   });
 
+  const firstRef = result.results.map((r) => r.meta && r.meta.more).find(Boolean);
+  if (firstRef) {
+    lines.push(`Open any result in full with agent_read({ ref: "${firstRef}" }) using the ref shown beside it (or: node <plugin folder>/mcp/agent-find/read-cli.js "${firstRef}").`);
+  }
+
   return lines.join('\n').trim();
 }
 

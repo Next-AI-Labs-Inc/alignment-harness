@@ -15,6 +15,16 @@ const os = require('os');
 const path = require('path');
 
 function getDataDir() {
+  // One answer for the whole harness: the hooks, the CLI and this search must all
+  // read the same folder, or a record the hooks wrote is invisible to the search.
+  // lib/core.js owns the lookup (CLAUDE_PLUGIN_DATA, then ALIGNMENT_HARNESS_DATA,
+  // then the harness's own folder under the person's Claude config, then a temp
+  // folder). The CLI fallback is run from Bash, which does not get
+  // CLAUDE_PLUGIN_DATA, so without this it searched an empty temp folder.
+  try {
+    const core = require('../../../lib/core');
+    if (core && core.P && core.P.data) return core.P.data;
+  } catch (_) { /* fall through to the plain lookup */ }
   const fromEnv = process.env.CLAUDE_PLUGIN_DATA;
   if (fromEnv && fromEnv.trim()) return fromEnv.trim();
   return path.join(os.tmpdir(), 'alignment-harness-unbound');

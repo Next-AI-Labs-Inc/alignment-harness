@@ -90,8 +90,8 @@ Previously, catch blocks in CoachingSessionHelper silently swallowed errors —
 users saw a frozen UI with no feedback. Now shows error message via
 setErrorNoResponseFromAiMessage in all coaching error paths.
 
-Resolves-Proposal: 69afbab29f16fc22c844cc14
-Resolves-Proposal: 69afbab29f16fc22c844cc1a
+Resolves-Proposal: 6a00000000000000000000a1
+Resolves-Proposal: 6a00000000000000000000a2
 
 Tags: User Facing, Coaching Quality, Priority:9/10
 Files: <frontend-repo>/src/components/helpers/CoachingSessionHelper.js

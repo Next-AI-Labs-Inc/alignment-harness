@@ -273,7 +273,7 @@ The auditor performs THREE checks:
 **Check 1 — Seed Coverage:**
 For every scope item in the sub-seed: does a stage answer it?
 ```
-Scope item: "State-by-state market map"
+Scope item: "State-by-state telehealth map"
 Mapped to: Stage 3 (Research), Track B
 Status: COVERED
 ```

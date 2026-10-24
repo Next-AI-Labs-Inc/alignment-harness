@@ -287,7 +287,7 @@ This script:
 The pattern discovered 3 real bugs across 4 audit rounds:
 1. Round 1 (20): Found that `incomplete_expired` status was not handled
 2. Round 2 (50): Found multi-customer resolution was needed (users with 2+ Stripe customers)
-3. Round 3 (all): Confirmed 100% accuracy after fixes on all matched records
+3. Round 3 (all): Confirmed 100% accuracy after fixes on 241 matched records
 
 ## Checklist for New Audit Scripts
 

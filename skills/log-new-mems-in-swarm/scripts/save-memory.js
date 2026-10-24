@@ -20,6 +20,19 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 
+// The harness's own command, found from where this file sits inside the plugin, so the
+// records land in the person's own data folder (where agent_find searches) whether or
+// not `alignment-harness` is on the PATH of the shell the agent runs.
+function harnessCommand() {
+  const roots = [process.env.CLAUDE_PLUGIN_ROOT, path.resolve(__dirname, '..', '..'), path.resolve(__dirname, '..', '..', '..')];
+  for (const root of roots) {
+    if (!root) continue;
+    const bin = path.join(root, 'bin', 'alignment-harness');
+    if (fs.existsSync(bin)) return { file: process.execPath, pre: [bin] };
+  }
+  return { file: 'alignment-harness', pre: [] };
+}
+
 function parseArgs(argv) {
   const out = {};
   for (let i = 0; i < argv.length; i++) {
@@ -48,7 +61,7 @@ function resolveMemoryDir() {
   // actually lives; fall back to a local .alignment-harness folder if the
   // CLI isn't on PATH for some reason (e.g. running this script standalone).
   try {
-    const out = execFileSync('alignment-harness', ['records', 'memory'], { encoding: 'utf8' }).trim();
+    const out = execFileSync(harnessCommand().file, [...harnessCommand().pre, 'records', 'memory'], { encoding: 'utf8' }).trim();
     if (out) return out;
   } catch { /* fall through */ }
   const dir = path.join(process.cwd(), '.alignment-harness', 'records', 'memory');
