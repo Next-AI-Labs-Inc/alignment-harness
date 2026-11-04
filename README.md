@@ -1,6 +1,10 @@
 # Alignment Harness for Claude Code
 
-Created by **Jonathan Haber** · Published by **Next AI Labs, Inc.** · Open source (MIT)
+Created by **Jonathan Haber** · Published by **Next AI Labs, Inc.** · Open source (MIT) · Website: [alignment-harness-site.vercel.app](https://alignment-harness-site.vercel.app/)
+
+## Creator's reflection, as of November 4, 2026
+
+A recorded reflection from Jonathan Haber, who created the harness, on where it stands as of today (about 9 minutes): [listen to the recording](https://github.com/Next-AI-Labs-Inc/alignment-harness/raw/main/media/creator-reflection-2026-11-04.m4a) (m4a, 2.1 MB).
 
 The Alignment Harness is a plugin for Claude Code, designed to make Claude more operationally efficient and more aligned with the intent of the person it's working for.
 

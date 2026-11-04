@@ -35,6 +35,21 @@ const PRIVATE_PORT = ['localhost', ':', '3002'].join('');
 const PUBLIC_CONTACT = ['founder', '@', 'ixco', 'ach.com'].join('');
 const PUBLIC_CONTACT_FILES = new Set(['README.md']);
 
+// Recordings the author made for publication, which this scanner cannot read as text. Founder ruling
+// 2026-11-04: "upload this to the harness github page ... preface it as creators reflection as of
+// today." Each is allowed only at this exact path and with this exact SHA-256 fingerprint, so a
+// different file, or this one re-recorded or altered, is unscannable again and fails until he
+// approves it and its fingerprint is recorded here.
+const APPROVED_MEDIA = new Map([
+  ['media/creator-reflection-2026-11-04.m4a', '7d787f73f8833a1a7c144c8aa4b6294d07e4eee17c45246010dd364407ce7bd1'],
+]);
+function isApprovedMedia(rel, file) {
+  const want = APPROVED_MEDIA.get(rel.split(path.sep).join('/'));
+  if (!want) return false;
+  const got = require('crypto').createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+  return got === want;
+}
+
 const FAIL_RULES = [
   { id: 'anthropic-key', re: /sk-ant-[A-Za-z0-9_-]{16,}/ },
   { id: 'openai-style-key', re: /\bsk-(proj-)?[A-Za-z0-9]{24,}/ },
@@ -104,7 +119,7 @@ function scan() {
     const rel = path.relative(ROOT, file);
     if (NEVER_SHIP.some((re) => re.test(rel))) { failures.push({ rule: 'never-ship-file', file: rel, line: 0, excerpt: path.basename(rel) }); continue; }
     const isText = TEXT_EXT.test(file) || !path.extname(file);
-    if (!isText) { binaries.push(rel); continue; }
+    if (!isText) { if (!isApprovedMedia(rel, file)) binaries.push(rel); continue; }
     let text;
     try { text = fs.readFileSync(file, 'utf8'); } catch (_) { continue; }
     if (text.includes('\u0000')) { binaries.push(rel); continue; }
