@@ -115,6 +115,14 @@ RECORD_HEREDOC_CMD=$(printf 'alignment-harness record scope-declarations <<'"'"'
 evt7 ",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":$(printf '%s' "$RECORD_HEREDOC_CMD" | node -e 'process.stdout.write(JSON.stringify(require("fs").readFileSync(0,"utf8")))')}" | hook pre-tool >/dev/null 2>&1
 [ $? -eq 0 ] && ok "record <kind> <<EOF heredoc save is not blocked while the gate is armed (Class B, typed-skill save)" || bad "Class B regression: record heredoc blocked while gate armed"
 
+# Skipping the person's permission prompt is only for the harness's own record command. Anything in front
+# of it, or a different file that happens to be named alignment-harness, must get the normal prompt.
+# (Before 4 Nov 2026 both of these were approved without asking.)
+asks_person() { printf '%s' "$1" | node -e 'process.stdout.write(JSON.stringify(require("fs").readFileSync(0,"utf8")))' | { read -r J; evt7 ",\"tool_name\":\"Bash\",\"tool_input\":{\"command\":$J}" | hook pre-tool 2>/dev/null; } | grep -q '"permissionDecision":"allow"' && return 1 || return 0; }
+asks_person "$(printf "node x.js; rm -rf ~/nothing-here; alignment-harness record foo <<'EOF'\nhi\nEOF")" && ok "a command chained in front of record still asks the person" || bad "SECURITY: a command chained in front of record skipped the permission prompt"
+asks_person "$(printf "node /tmp/other/alignment-harness record foo <<'EOF'\nhi\nEOF")" && ok "a different file named alignment-harness still asks the person" || bad "SECURITY: a look-alike alignment-harness file skipped the permission prompt"
+asks_person "$(printf "alignment-harness record foo <<'EOF'\nhi\nEOF")" && bad "the harness's own record command now asks every time (over-tightened)" || ok "the harness's own record command still runs without a prompt"
+
 S7=88888888-bbbb-cccc-dddd-eeeeeeeeeeee; TP7="$TMP/$S7.jsonl"; : > "$TP7"; arm7
 # The Write tool, targeted directly at a path inside the harness's own
 # records folder, is the same bookkeeping through a different tool — several

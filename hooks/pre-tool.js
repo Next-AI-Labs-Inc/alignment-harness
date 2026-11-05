@@ -152,15 +152,21 @@ const HARNESS_BIN = path.join(core.PLUGIN_ROOT, 'bin', 'alignment-harness');
 // `settings set` (they can turn the agent's own checks down), `contract remove` and `clear` (they
 // drop a promised check), `contract verify` (runs code), and opening the settings page.
 const SAFE_HARNESS_SUB = /^(attest|score|status|doctor|conflicts|paths|session-id|store\s+(add|update)\s+\S+|contract\s+(add|list|replace)|settings\s+(list|get)|config\s+(show|path)|risk-table\s+(show|path))\b/;
-const FALLBACK_IDIOM = /^\s*H=alignment-harness;\s*command -v \$H\s*>\s*\/dev\/null(\s*2>&1)?\s*\|\|\s*H="node [^"]*alignment-harness";\s*\$H\s+/;
+// This plugin's own harness program, as a regex fragment. Every command shape that skips the
+// person's permission prompt must name THIS file exactly. A looser "any path that ends in
+// alignment-harness" let a command such as
+//   node x.js; rm -rf ~/Documents; alignment-harness record foo <<'EOF'
+// pass as bookkeeping, so everything in front of the harness call ran without asking
+// (reported 4 Nov 2026 from a review on another machine).
+const HARNESS_BIN_PATTERN = HARNESS_BIN.replace(/[.*+?^${}()|[\]\\]/g, (ch) => '\\' + ch);
+const FALLBACK_IDIOM = new RegExp(String.raw`^\s*H=alignment-harness;\s*command -v \$H\s*>\s*\/dev\/null(\s*2>&1)?\s*\|\|\s*H="node ` + HARNESS_BIN_PATTERN + String.raw`";\s*\$H\s+`);
 
 // The arguments of a command that is ONLY a call to this plugin's harness command (nothing chained,
 // redirected or substituted), or null.
 function harnessInvocation(cmd) {
   const c = String(cmd || '').replace(FALLBACK_IDIOM, 'alignment-harness ');
   if (/`|\$\(/.test(c)) return null;
-  const esc = HARNESS_BIN.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  const m = c.match(new RegExp(`^\\s*(?:alignment-harness|node\\s+"?${esc}"?)\\s+([\\s\\S]*)$`));
+  const m = c.match(new RegExp(`^\\s*(?:alignment-harness|node\\s+"?${HARNESS_BIN_PATTERN}"?)\\s+([\\s\\S]*)$`));
   if (!m) return null;
   const rest = m[1].replace(/\s*2>&1\s*$/, '');
   if (/[;&|<>\n]/.test(stripQuoted(rest))) return null;
@@ -198,7 +204,7 @@ function safeHarnessCommand(cmd) {
 // already rejects the whole command if either appears anywhere, so this
 // only needs to keep the charset itself narrow (letters, digits, the usual
 // filename punctuation, and `$`/`{`/`}` for variable expansion).
-const RECORD_HEREDOC_CMD = /^\s*(?:alignment-harness|node\s+"?[^\n"]*alignment-harness[^\n"]*"?)\s+record\s+[A-Za-z0-9_-]+(?:\s+--name\s+"?[A-Za-z0-9_.${}-]+"?)?\s*(?:--json\s*)?<<[-~]?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1\s*\n([\s\S]*?)\n\2\s*$/;
+const RECORD_HEREDOC_CMD = new RegExp(String.raw`^\s*(?:alignment-harness|node\s+"?` + HARNESS_BIN_PATTERN + String.raw`"?)\s+record\s+[A-Za-z0-9_-]+(?:\s+--name\s+"?[A-Za-z0-9_.$\{}-]+"?)?\s*(?:--json\s*)?<<[-~]?\s*(['"]?)([A-Za-z_][A-Za-z0-9_]*)\1\s*\n([\s\S]*?)\n\2\s*$`);
 function isRecordHeredoc(cmd) {
   const c = String(cmd || '').replace(FALLBACK_IDIOM, 'alignment-harness ');
   if (/`|\$\(/.test(c)) return false; // command substitution can run anything, even inside a heredoc body
