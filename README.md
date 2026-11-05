@@ -223,7 +223,15 @@ In a terminal, you can instead type `/plugin marketplace add Next-AI-Labs-Inc/al
 
 To update: `claude plugin marketplace update alignment-harness`, then `claude plugin update alignment-harness@alignment-harness` (two separate commands), then restart Claude Code. This only updates a copy installed through the plugin system. A git clone is updated with `git pull` and isn't what Claude Code runs. The [changelog](CHANGELOG.md) says what changed in each version.
 
-To remove it: `/plugin uninstall alignment-harness@alignment-harness`. It leaves your own settings, hooks and skills as they were.
+**What installing changes, and how to remove it.** The harness's checks come from the plugin itself, so installing it doesn't add hooks to your settings. Your own settings, hooks and skills stay as they were. Claude Code's plugin system adds only two entries to your user settings: a note that the `alignment-harness` marketplace exists (`extraKnownMarketplaces`), and that the plugin is on (`enabledPlugins`). To remove it, run these as two commands:
+
+`claude plugin uninstall alignment-harness@alignment-harness`
+`claude plugin marketplace remove alignment-harness`
+
+That turns everything off and deletes what the harness recorded. A plugin installed this way doesn't live in a folder you can delete: deleting a git copy of this repo doesn't uninstall it, and uninstalling doesn't need one. Three things are yours to remove if you want:
+- `~/.alignment-harness`, if you used the one-step Node setup.
+- If you said yes during first-session calibration to keeping your sessions for longer, Claude Code's `cleanupPeriodDays` setting. It is changed only with your yes, and a backup is made first.
+- An unused copy of the plugin that Claude Code keeps in its own plugin cache. It no longer runs.
 
 If something breaks during setup and your agent fixes it, please open an issue or a pull request with what it changed. That is the fastest way this gets better for the next person.
 
