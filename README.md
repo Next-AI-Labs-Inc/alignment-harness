@@ -199,17 +199,20 @@ It has also been tried with a real model in sealed test setups, each a firewalle
 **The easy way: give your agent this one line.** It works in a terminal and in the Claude desktop app, on Mac, Linux and Windows:
 
 ```
-Install the Claude Code plugin alignment-harness@alignment-harness from the marketplace Next-AI-Labs-Inc/alignment-harness, following the "Steps for the agent" in https://github.com/Next-AI-Labs-Inc/alignment-harness#install
+Install the Claude Code plugin alignment-harness@alignment-harness from the GitHub marketplace Next-AI-Labs-Inc/alignment-harness, following every step of "Steps for the agent" in https://github.com/Next-AI-Labs-Inc/alignment-harness#install. That includes first removing any earlier copy, so exactly one current copy is installed.
 ```
 
-**Steps for the agent.** Install through Claude Code's plugin system (not a git clone), so updates arrive with `claude plugin update`.
+**Steps for the agent.** Install through Claude Code's plugin system (not a git clone), so updates arrive with `claude plugin update`. Run each command on its own line. Windows PowerShell 5.1 rejects `&&`.
 
-1. Find the `claude` command. If `claude` isn't on the PATH, which is normal inside the Claude desktop app, use the copy the app carries. On a Mac it is `~/Library/Application Support/Claude/claude-code/<newest version>/<folder>/claude.app/Contents/MacOS/claude`. On Windows, look for `claude.exe` under `%APPDATA%\Claude\claude-code` and `%LOCALAPPDATA%`.
-2. Run these as **two separate commands**. Windows PowerShell 5.1 rejects `&&`.
-   `claude plugin marketplace add Next-AI-Labs-Inc/alignment-harness`
-   `claude plugin install alignment-harness@alignment-harness`
-3. Check what the computer has. If `node --version` fails, see **What it needs** below and offer the person the one-step Node setup. On Windows, also check for Git for Windows.
-4. Tell the person to start a new Claude Code session, then run `/alignment-harness:harness` there to see what is on, what needs setup, and how to switch any piece off.
+1. **Find the `claude` command.** If `claude` isn't on the PATH, which is normal inside the Claude desktop app, use the copy the app carries. On a Mac it is `~/Library/Application Support/Claude/claude-code/<newest version>/<folder>/claude.app/Contents/MacOS/claude`. On Windows, look for `claude.exe` under `%APPDATA%\Claude\claude-code` and `%LOCALAPPDATA%`.
+2. **Look for an earlier copy first.** Run `claude plugin marketplace list` and `claude plugin list`.
+   - If a marketplace named `alignment-harness` is listed with any source **other than** `GitHub (Next-AI-Labs-Inc/alignment-harness)`, such as a local folder or a git clone, remove it before installing: `claude plugin uninstall alignment-harness@alignment-harness`, then `claude plugin marketplace remove alignment-harness`. If you skip this, the GitHub install is refused and Claude Code keeps running the old copy while reporting it as "already installed".
+   - If it is already listed from `GitHub (Next-AI-Labs-Inc/alignment-harness)`, don't reinstall. Update it with `claude plugin marketplace update alignment-harness`, then `claude plugin update alignment-harness@alignment-harness`, and go to step 4.
+   - Also search the person's Claude settings files (`~/.claude/settings.json`, plus `.claude/settings.json` and `.claude/settings.local.json` in the project) for hooks that mention `alignment-harness`. Hooks someone wired in by hand would run the harness's checks a second time. Show the person what you found and remove those entries with their OK. Leave everything else in those files untouched.
+3. **Install:** `claude plugin marketplace add Next-AI-Labs-Inc/alignment-harness`, then `claude plugin install alignment-harness@alignment-harness`.
+4. **Confirm exactly one current copy.** `claude plugin list` shows `alignment-harness@alignment-harness` once, enabled, with the version in this repo's `.claude-plugin/plugin.json`, and `claude plugin marketplace list` shows its source as `GitHub (Next-AI-Labs-Inc/alignment-harness)`. If not, say what you see. Don't report success.
+5. **Check what the computer has.** If `node --version` fails, see **What it needs** below and offer the person the one-step Node setup. On Windows, also check for Git for Windows.
+6. Tell the person to start a new Claude Code session, then run `/alignment-harness:harness` there to see what is on, what needs setup, and how to switch any piece off.
 
 In a terminal, you can instead type `/plugin marketplace add Next-AI-Labs-Inc/alignment-harness` then `/plugin install alignment-harness@alignment-harness` yourself.
 
