@@ -196,21 +196,29 @@ This is an early release. As of 16 October 2026 the plugin installs and uninstal
 
 It has also been tried with a real model in sealed test setups, each a firewalled container with a made-up user and repository, started from a fresh install. Three of those sessions sent ordinary requests to see that the pausing checks fire, and several ran the first-session calibration. These are our own tests, not a wide trial. They turned up problems, and several have since been fixed, so expect rough edges and please tell us about the ones you hit.
 
-Inside Claude Code:
+**The easy way: give your agent this one line.** It works in a terminal and in the Claude desktop app, on Mac, Linux and Windows:
 
 ```
-/plugin marketplace add Next-AI-Labs-Inc/alignment-harness
-/plugin install alignment-harness@alignment-harness
+Install the Claude Code plugin alignment-harness@alignment-harness from the marketplace Next-AI-Labs-Inc/alignment-harness, following the "Steps for the agent" in https://github.com/Next-AI-Labs-Inc/alignment-harness#install
 ```
 
-Then start a new session and run `/alignment-harness:harness` to see what is on, what needs setup, and how to switch any piece off.
+**Steps for the agent.** Install through Claude Code's plugin system (not a git clone), so updates arrive with `claude plugin update`.
+
+1. Find the `claude` command. If `claude` isn't on the PATH, which is normal inside the Claude desktop app, use the copy the app carries. On a Mac it is `~/Library/Application Support/Claude/claude-code/<newest version>/<folder>/claude.app/Contents/MacOS/claude`. On Windows, look for `claude.exe` under `%APPDATA%\Claude\claude-code` and `%LOCALAPPDATA%`.
+2. Run these as **two separate commands**. Windows PowerShell 5.1 rejects `&&`.
+   `claude plugin marketplace add Next-AI-Labs-Inc/alignment-harness`
+   `claude plugin install alignment-harness@alignment-harness`
+3. Check what the computer has. If `node --version` fails, see **What it needs** below and offer the person the one-step Node setup. On Windows, also check for Git for Windows.
+4. Tell the person to start a new Claude Code session, then run `/alignment-harness:harness` there to see what is on, what needs setup, and how to switch any piece off.
+
+In a terminal, you can instead type `/plugin marketplace add Next-AI-Labs-Inc/alignment-harness` then `/plugin install alignment-harness@alignment-harness` yourself.
 
 **What it needs.** The harness's checks are small programs written in JavaScript, so they run on Node.js 18 or newer. Claude Code itself doesn't include a Node you can use, so a computer can have Claude Code and no Node.
 
 - **If Node isn't there**, the harness stays off and nothing breaks. At the start of the next session it tells you so, and Claude offers to set up the harness's own copy in one step: `bash <plugin folder>/scripts/setup-node.sh`. That downloads the official Node.js 24 for your computer from nodejs.org (about 40 MB) into `~/.alignment-harness/node` and checks its fingerprint against nodejs.org's published list. It needs no admin password and changes nothing else on the computer. Start a new session afterwards and the harness is on. To remove that copy, delete `~/.alignment-harness`.
 - **On Windows**, Claude Code starts the harness's checks through bash, so install [Git for Windows](https://git-scm.com/download/win) (`winget install --id Git.Git -e`) as well. Claude Code finds its bash on its own. Then set up Node as above, or with `winget install --id OpenJS.NodeJS.LTS -e`. Windows support is new in 0.2.0 and so far tested only by imitating Windows paths and the PowerShell tool on a Mac. Please report what you hit.
 
-To update: `claude plugin marketplace update alignment-harness`, then `claude plugin update alignment-harness@alignment-harness`, then restart Claude Code. The [changelog](CHANGELOG.md) says what changed in each version.
+To update: `claude plugin marketplace update alignment-harness`, then `claude plugin update alignment-harness@alignment-harness` (two separate commands), then restart Claude Code. This only updates a copy installed through the plugin system. A git clone is updated with `git pull` and isn't what Claude Code runs. The [changelog](CHANGELOG.md) says what changed in each version.
 
 To remove it: `/plugin uninstall alignment-harness@alignment-harness`. It leaves your own settings, hooks and skills as they were.
 
