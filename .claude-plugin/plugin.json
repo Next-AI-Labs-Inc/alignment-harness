@@ -1,6 +1,6 @@
 {
   "name": "alignment-harness",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Keeps Claude Code aligned with what you actually meant: it states its understanding before acting, scores how risky each task is and scales its care to match, and proves work before calling it done. Every piece has an on/off switch; nothing traps you.",
   "author": {
     "name": "Jonathan Haber"

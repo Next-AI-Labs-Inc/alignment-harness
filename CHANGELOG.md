@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1 (2026-11-04)
+
+Two more ways around the person's permission prompt are closed. Both were found in a review run on a Windows PC during the first live demo, and both were reproduced against 0.2.0 before fixing.
+
+- **Mac and Linux: a command after the record text's first `EOF` line.** Bash ends the text the harness records at the first line that reads `EOF`, so anything written after that line runs as a command. The harness read the text as running to the last `EOF`, so it approved the whole thing without asking. Now, if the end marker appears early, the person is asked as usual.
+- **Windows: a second command hidden behind `\"`.** PowerShell has no backslash escape, so `\"` ends a string there. The harness read it the bash way and missed a second command after it. Now a PowerShell command containing `\"` or curly quotes is never treated as "only a harness command" or "only reads", and it gets the person's normal rules.
+
+Four tests keep these closed. The 0.2.0 code fails two of them, and the third is a guard for curly quotes, which 0.2.0 already handled.
+
 ## 0.2.0 (2026-11-04)
 
 - **Security: no more silent approval of a command chained in front of the harness's own.** The harness lets its own `record` command run without a permission prompt. It used to recognize that command by "any path ending in alignment-harness", so `node x.js; rm -rf ~/Documents; alignment-harness record foo <<'EOF'` was approved as a whole. Now only the harness's own installed program, with nothing in front of it, skips the prompt. Affects Mac and Linux, where Claude's command tool is Bash. Reported from a review on 4 November 2026.

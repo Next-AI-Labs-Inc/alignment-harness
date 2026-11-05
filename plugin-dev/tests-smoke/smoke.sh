@@ -737,6 +737,16 @@ wjson PreToolUse PowerShell 'Get-ChildItem -Path . | Select-String foo' | hook p
   && ok "on PowerShell, looking around is never held" || bad "on PowerShell, a read-only command was held"
 wjson PreToolUse PowerShell 'Get-Content (Remove-Item x)' | hook pre-tool >/dev/null 2>&1; [ $? -eq 2 ] \
   && ok "on PowerShell, a command hidden in ( ) is not mistaken for read-only" || bad "on PowerShell, Get-Content (Remove-Item x) passed as read-only"
+# Two ways around the permission prompt found in a review (4 Nov 2026). Each must get the person's normal prompt.
+allowed() { WS="$WS" WTP="$WTP" TOOL="$1" CMD="$2" node -e 'const e=process.env;process.stdout.write(JSON.stringify({session_id:e.WS,transcript_path:e.WTP,hook_event_name:"PreToolUse",tool_name:e.TOOL,tool_input:{command:e.CMD}}))' | hook pre-tool 2>/dev/null | grep -q '"permissionDecision":"allow"'; }
+allowed Bash "$(printf "alignment-harness record foo <<'EOF'\nhi\nEOF\nrm -rf ~/nothing-here\nEOF")" \
+  && bad "SECURITY: a command after the record text's first EOF line skipped the permission prompt" || ok "a command after the record text's first EOF line still asks the person"
+allowed PowerShell "node \"$ROOT/bin/alignment-harness\" status --x \"a\\\" ; Remove-Item ~/nothing-here ; \\\"\"" \
+  && bad "SECURITY: on PowerShell, \\\" hid a second command from the permission prompt" || ok "on PowerShell, a second command behind \\\" still asks the person"
+allowed PowerShell "node \"$ROOT/bin/alignment-harness\" status --x “a” ; Remove-Item ~/nothing-here" \
+  && bad "SECURITY: on PowerShell, curly quotes hid a second command from the permission prompt" || ok "on PowerShell, a second command behind curly quotes still asks the person"
+allowed PowerShell "node \"$ROOT/bin/alignment-harness\" status" \
+  && ok "on PowerShell, the harness's own status command still runs without a prompt" || bad "on PowerShell, the harness's own status command now asks every time (over-tightened)"
 
 rm -rf "$TMP"
 echo; echo "smoke: $PASS passed, $FAIL failed"

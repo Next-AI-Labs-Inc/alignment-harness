@@ -68,7 +68,16 @@ const VERIFY_BASH = /(^|[\s;&|])curl\s|lightpanda|modal-inspect/;
 const VERIFY_PS = /(^|[\s;|])(Invoke-WebRequest|iwr|Invoke-RestMethod|irm)\s/i;
 // PowerShell runs a bare ( … ), { … }, @( … ) or $( … ) found in a command's arguments, so a command
 // holding one outside quotes is never treated as "only reads" or "only a harness command".
-function psEvaluatesSomething(cmd) { return /[(){}@`]|\$\(/.test(stripQuoted(String(cmd || ''))); }
+// PowerShell reads quotes differently from bash: a backslash escapes nothing (so \" ENDS a string),
+// and curly quotes ‘ ’ “ ” „ ‟ ‚ ‛ are quotes too. stripQuoted() reads them the bash way, so a
+// command using either could hide a second command from these checks. Such a command is never
+// treated as read-only or as only a harness command; it gets the person's normal rules instead.
+// (Found in a review, 4 Nov 2026.)
+function psEvaluatesSomething(cmd) {
+  const c = String(cmd || '');
+  if (/\\["']|[‘’‚‛“”„‟]/.test(c)) return true;
+  return /[(){}@`]|\$\(/.test(stripQuoted(c));
+}
 // One piece of a PowerShell command that only looks at things (cmdlets are case-insensitive).
 const READONLY_PS_PIECE = /^(Get-ChildItem|gci|dir|Get-Content|gc|Select-String|sls|Get-Location|gl|Test-Path|Resolve-Path|Get-Item|gi|Get-ItemProperty|Measure-Object|measure|Select-Object|select|Sort-Object|Where-Object|where|Format-List|fl|Format-Table|ft|Write-Output|write|Write-Host|Get-Command|gcm|Get-Date|Split-Path|Join-Path|Get-FileHash|Get-Process|gps|Get-Service)(\s|$)/i;
 const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
@@ -215,7 +224,14 @@ const RECORD_HEREDOC_CMD = new RegExp(String.raw`^\s*(?:alignment-harness|node\s
 function isRecordHeredoc(cmd) {
   const c = String(cmd || '').replace(FALLBACK_IDIOM, 'alignment-harness ');
   if (/`|\$\(/.test(c)) return false; // command substitution can run anything, even inside a heredoc body
-  return RECORD_HEREDOC_CMD.test(c);
+  const m = c.match(RECORD_HEREDOC_CMD);
+  if (!m) return false;
+  // Bash ends the record text at the FIRST line that is the delimiter. If the delimiter also appears
+  // earlier inside what the pattern took as the body, everything after that earlier line runs as
+  // commands: `record foo <<'EOF'` / hi / EOF / rm -rf ~/x / EOF. (Found in a review, 4 Nov 2026.)
+  const delimiter = m[2];
+  if (m[3].split('\n').some((line) => line.replace(/^\t+/, '') === delimiter)) return false;
+  return true;
 }
 
 // A Write/Edit/MultiEdit/NotebookEdit whose target path resolves inside the
