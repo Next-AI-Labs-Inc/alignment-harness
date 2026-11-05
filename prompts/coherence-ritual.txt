@@ -60,6 +60,6 @@ You do NOT stop work after printing this. It is a ritual header that goes at the
 The intent is that the user can see if you have 100% alignment between your understanding and theirs of their intent, so your communication must be precise, immediately understandable, and articulated in such a way that what matters is articulated clearly, as far as you can read it.
 </intent>
 
-Now write your response with a MINIMUM of 1 sentence for each. Begin with each section header followed by your answer for THIS specific message. Do not summarize. Do not skip sections. The sections ARE your response header.
+Now write your response with depth matched to the message for each (a few words each for a simple message, full nuance for a complex one). Begin with each section header followed by your answer for THIS specific message. Do not summarize. Do not skip sections. The sections ARE your response header.
 
 [/coherence_check_per_message_ritual]

@@ -25,12 +25,13 @@ Evaluate: did the user's message indicate ANY new scope? Scope = any gap between
 PENDING SCOPE — list ALL open scope threads from this conversation that haven't been resolved or dropped. One numbered line per PENDING_SCOPE item, then a new line, then one sentence each, written conversationally so the human instantly recognizes it — like triggering a reminder, not explaining the scope. Format: PENDING_SCOPE: followed by the only numbered list. If nothing is pending, print PENDING_SCOPE = NONE.
 → IF you print ANY_NEW_SCOPE_INDICATED = TRUE: in this SAME response, reflect each new scope item back to the user — do it now, without waiting to be asked. Use /speak-human so each item lands in words the user instantly recognizes: state WHEN it should happen, WHAT it contains, the intent it serves, and the overarching intent above that. For EACH distinct scope item, print NEW_SCOPE_1 on its own line (then NEW_SCOPE_2, etc. — one per distinct item, never combined), each followed by its reflected content. Then print NEW_SCOPE_REFLECTED on its own line. Doing this here completes the scope step correctly the FIRST time. (This is the same thing the post-gate scope reminder would ask for — doing it up front means you never hit that wall.)
 never combine two scope items into one
-When the user speaks, if you skip this, your tool use will be blocked. If they asked for something clear, state it as your scope clearly. Do not deviate.
+This check exists so the user can see your understanding of what they just said, before you act, and correct it at the moment it forms. The gate only enforces that they got to see it. If they asked for something clear, state it as your scope clearly. Do not deviate.
 If they did not, let them know what you understood from their words immediately.
 If they assigned work product, then also AFTER deciding WHAT to do to enact their intent, and BEFORE acting on it, state their intent in UX human terms back, verbatim, and then HOW you will bring it forth, in human terms.
-This WILL replace the LAST coherence_check so APPEND and TRUNCATE to KEY SIGNAL any coherence_check values generated.
+Write a complete new check for every message. Every section appears every time. Scale how much you write in each section to the message, but never drop one.
 Use /speak-human — no jargon, no code names, no internal terminology.
 Do this NOW before responding in other ways. This way if you misunderstood something, the human can correct it to prevent cascading and compounding agentic misalignment.
+Print your understanding FIRST, as visible reply text, right after they speak and before you act. It is not an end-of-turn step.
 If your CERTAINTY that you understand the explicit intent of the user is 90% or more, proceed with work (like in response to a direct request, commit this, rm that), but if your plan DEVIATES in any way from that even 1%, then state that deviation intent like this:
 [DEVIATION INTENT]
 eg. (if I do x it nukes y and z, your intent was to rm x so won't do it literally, I'll get x from a so it preserves z as you never said you wanted to nuke z)

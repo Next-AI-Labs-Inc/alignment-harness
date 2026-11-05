@@ -27,6 +27,10 @@ const UNDERSTANDING_TOOLS = new Set([
   'TaskCreate', 'TaskUpdate', 'TaskList', 'TaskGet', 'TaskOutput', 'TodoWrite', 'TodoRead',
   'SendMessage', 'TeamCreate', 'Agent', 'Task', 'Skill', 'BashOutput', 'ExitPlanMode',
   'ListMcpResourcesTool', 'ReadMcpResourceTool', 'AskUserQuestion',
+  // The Claude desktop app's turn-close step: it only fills the recap box and changes nothing
+  // in the project. Gating it forced the check to be written just before it, where the app
+  // shows only a summary, so the person never saw the check.
+  'mcp__ccd_turn__wrap_up',
 ]);
 
 // One piece of a shell command that only looks at things. A command counts as read-only when
@@ -313,7 +317,7 @@ function fullRitualText(sid) {
 // Same limits as every other coherence block: "remind" never blocks, and maxBlocksPerMessage steps back.
 function blockUntilRitualRead(sid, gateFile, tool, cg) {
   const ritual = ritualPathFor(sid);
-  const msg = `Your check is noted, but this session hasn't read the full coherence ritual yet. Each message shows only a short form of it; once per session, read the full wording, then the short form is enough.
+  const msg = `Your check is noted, but this session hasn't read the full coherence ritual yet. Each message shows only a short form of it; once per session, read the full wording, then the short form is enough. That rule is only about reading the file. The coherence check itself is owed on every message they send.
 
 Read the whole file now (Read with no offset or limit, or \`cat\`), then retry this call. Your attestation still stands; there's no need to attest again. If the full wording changes what you understood, correct your check in your reply first.
 
