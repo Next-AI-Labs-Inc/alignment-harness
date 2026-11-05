@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 (2026-11-04)
+
+- **Security: no more silent approval of a command chained in front of the harness's own.** The harness lets its own `record` command run without a permission prompt. It used to recognize that command by "any path ending in alignment-harness", so `node x.js; rm -rf ~/Documents; alignment-harness record foo <<'EOF'` was approved as a whole. Now only the harness's own installed program, with nothing in front of it, skips the prompt. Affects Mac and Linux, where Claude's command tool is Bash. Reported from a review on 4 November 2026.
+- **Windows: the checks run in the main conversation.** A Windows session path uses `\`, which made every main conversation look like a helper agent, so the understanding check never fired. Claude's `PowerShell` command tool is now understood the same way as `Bash`. A command that hides another inside `( )`, `{ }` or `@( )` is never treated as read-only.
+- **No Node? One step to turn the harness on.** At session start the harness tells you it's off, and Claude offers `scripts/setup-node.sh`. It installs a fingerprint-checked Node.js 24 from nodejs.org into `~/.alignment-harness/node` with no admin password, and the harness uses it from the next session.
+- README and install doc say what the harness needs on Mac, Linux and Windows.
+
 ## 0.1.0 (2026-10-17)
 
 The first public release of the Alignment Harness for Claude Code, under the MIT license.

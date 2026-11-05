@@ -9,7 +9,7 @@
       "name": "alignment-harness",
       "source": "./",
       "description": "Keeps Claude Code aligned with what you actually meant: coherence check on every message, a per-task risk score every gate reads, and proof before 'done'.",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "Jonathan Haber"
       },

@@ -12,7 +12,7 @@ claude plugin marketplace add <this repository or folder> && claude plugin insta
 
 Inside Claude Code you can instead run `/plugin marketplace add <source>` then `/plugin install alignment-harness@alignment-harness`. Start a new session afterwards.
 
-Needs: Node.js 18 or newer (`node --version`). Without Node the plugin stays inactive and says so at session start; nothing breaks.
+Needs: Node.js 18 or newer (`node --version`). Without Node the plugin stays inactive and says so at session start, and Claude offers to run `bash <plugin folder>/scripts/setup-node.sh`, which puts the harness's own fingerprint-checked copy of Node in `~/.alignment-harness/node` (no admin password). The harness uses it from the next session. On Windows, also install Git for Windows: Claude Code starts the harness's checks through its bash.
 
 Everything is on by default. Optional setup that makes it sharper: `/alignment-harness:harness-setup`.
 

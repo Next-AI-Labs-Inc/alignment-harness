@@ -205,6 +205,11 @@ Inside Claude Code:
 
 Then start a new session and run `/alignment-harness:harness` to see what is on, what needs setup, and how to switch any piece off.
 
+**What it needs.** The harness's checks are small programs written in JavaScript, so they run on Node.js 18 or newer. Claude Code itself doesn't include a Node you can use, so a computer can have Claude Code and no Node.
+
+- **If Node isn't there**, the harness stays off and nothing breaks. At the start of the next session it tells you so, and Claude offers to set up the harness's own copy in one step: `bash <plugin folder>/scripts/setup-node.sh`. That downloads the official Node.js 24 for your computer from nodejs.org (about 40 MB) into `~/.alignment-harness/node` and checks its fingerprint against nodejs.org's published list. It needs no admin password and changes nothing else on the computer. Start a new session afterwards and the harness is on. To remove that copy, delete `~/.alignment-harness`.
+- **On Windows**, Claude Code starts the harness's checks through bash, so install [Git for Windows](https://git-scm.com/download/win) (`winget install --id Git.Git -e`) as well. Claude Code finds its bash on its own. Then set up Node as above, or with `winget install --id OpenJS.NodeJS.LTS -e`. Windows support is new in 0.2.0 and so far tested only by imitating Windows paths and the PowerShell tool on a Mac. Please report what you hit.
+
 To update: `claude plugin marketplace update alignment-harness`, then `claude plugin update alignment-harness@alignment-harness`, then restart Claude Code. The [changelog](CHANGELOG.md) says what changed in each version.
 
 To remove it: `/plugin uninstall alignment-harness@alignment-harness`. It leaves your own settings, hooks and skills as they were.

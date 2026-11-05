@@ -726,7 +726,7 @@ process.exit(need.every(n=>names.includes(n)) && s.includes("growth-strategy") &
   && ok "the server's company_intent tools and agent_find both reach the person's company intents" || bad "company intent tools: $(head -c 300 "$TMP/ic-mcp.out")"
 
 echo "Windows: a session on a Windows path, with Claude's PowerShell command tool"
-WS=99999999-aaaa-bbbb-cccc-1234567890ab; WTP="C:\\Users\\someone\\.claude\\projects\\C--work\\$WS.jsonl"
+WS=99999999-aaaa-bbbb-cccc-dddddddddddd; WTP="C:\\Users\\someone\\.claude\\projects\\C--work\\$WS.jsonl"
 node -e 'process.exit(require(process.argv[1]+"/hooks/common.js").isSubagent({session_id:process.argv[2],transcript_path:process.argv[3]})?1:0)' "$ROOT" "$WS" "$WTP" \
   && ok "a Windows main conversation is not mistaken for a helper agent" || bad "a Windows path makes the main conversation look like a helper agent (understanding check skipped)"
 wjson() { WS="$WS" WTP="$WTP" EV="$1" TOOL="$2" CMD="$3" node -e 'const e=process.env;process.stdout.write(JSON.stringify({session_id:e.WS,transcript_path:e.WTP,hook_event_name:e.EV,tool_name:e.TOOL,tool_input:{command:e.CMD},prompt:"please change how the login page works"}))'; }
