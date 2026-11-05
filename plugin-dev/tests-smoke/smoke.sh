@@ -725,6 +725,19 @@ const s=L.find(m=>m.id===3).result.content[0].text, f=L.find(m=>m.id===4).result
 process.exit(need.every(n=>names.includes(n)) && s.includes("growth-strategy") && f.includes("ref:record:company-intent/pricing-philosophy.json") ? 0 : 1)' "$TMP/ic-mcp.out" \
   && ok "the server's company_intent tools and agent_find both reach the person's company intents" || bad "company intent tools: $(head -c 300 "$TMP/ic-mcp.out")"
 
+echo "Windows: a session on a Windows path, with Claude's PowerShell command tool"
+WS=99999999-aaaa-bbbb-cccc-1234567890ab; WTP="C:\\Users\\someone\\.claude\\projects\\C--work\\$WS.jsonl"
+node -e 'process.exit(require(process.argv[1]+"/hooks/common.js").isSubagent({session_id:process.argv[2],transcript_path:process.argv[3]})?1:0)' "$ROOT" "$WS" "$WTP" \
+  && ok "a Windows main conversation is not mistaken for a helper agent" || bad "a Windows path makes the main conversation look like a helper agent (understanding check skipped)"
+wjson() { WS="$WS" WTP="$WTP" EV="$1" TOOL="$2" CMD="$3" node -e 'const e=process.env;process.stdout.write(JSON.stringify({session_id:e.WS,transcript_path:e.WTP,hook_event_name:e.EV,tool_name:e.TOOL,tool_input:{command:e.CMD},prompt:"please change how the login page works"}))'; }
+wjson UserPromptSubmit "" "" | hook user-prompt >/dev/null 2>&1
+wjson PreToolUse PowerShell 'Remove-Item -Recurse .\src' | hook pre-tool >/dev/null 2>&1; [ $? -eq 2 ] \
+  && ok "on PowerShell, a change waits until Claude has said what it understood" || bad "on PowerShell, a change went through before the understanding check"
+wjson PreToolUse PowerShell 'Get-ChildItem -Path . | Select-String foo' | hook pre-tool >/dev/null 2>&1; [ $? -eq 0 ] \
+  && ok "on PowerShell, looking around is never held" || bad "on PowerShell, a read-only command was held"
+wjson PreToolUse PowerShell 'Get-Content (Remove-Item x)' | hook pre-tool >/dev/null 2>&1; [ $? -eq 2 ] \
+  && ok "on PowerShell, a command hidden in ( ) is not mistaken for read-only" || bad "on PowerShell, Get-Content (Remove-Item x) passed as read-only"
+
 rm -rf "$TMP"
 echo; echo "smoke: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

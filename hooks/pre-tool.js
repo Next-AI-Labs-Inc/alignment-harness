@@ -65,6 +65,12 @@ function pieceChangesSomething(strippedPiece, rawPiece) {
   return false;
 }
 const VERIFY_BASH = /(^|[\s;&|])curl\s|lightpanda|modal-inspect/;
+const VERIFY_PS = /(^|[\s;|])(Invoke-WebRequest|iwr|Invoke-RestMethod|irm)\s/i;
+// PowerShell runs a bare ( … ), { … }, @( … ) or $( … ) found in a command's arguments, so a command
+// holding one outside quotes is never treated as "only reads" or "only a harness command".
+function psEvaluatesSomething(cmd) { return /[(){}@`]|\$\(/.test(stripQuoted(String(cmd || ''))); }
+// One piece of a PowerShell command that only looks at things (cmdlets are case-insensitive).
+const READONLY_PS_PIECE = /^(Get-ChildItem|gci|dir|Get-Content|gc|Select-String|sls|Get-Location|gl|Test-Path|Resolve-Path|Get-Item|gi|Get-ItemProperty|Measure-Object|measure|Select-Object|select|Sort-Object|Where-Object|where|Format-List|fl|Format-Table|ft|Write-Output|write|Write-Host|Get-Command|gcm|Get-Date|Split-Path|Join-Path|Get-FileHash|Get-Process|gps|Get-Service)(\s|$)/i;
 const EDIT_TOOLS = new Set(['Edit', 'Write', 'MultiEdit', 'NotebookEdit']);
 
 function stripQuoted(cmd) { return String(cmd).replace(/"(?:[^"\\]|\\.)*"|'[^']*'/g, '""'); }
@@ -99,7 +105,7 @@ function pieceIsHarnessNodeInvocation(rawPiece) {
   return /alignment-harness/.test(trimmed);
 }
 
-function isReadOnlyBash(cmd) {
+function isReadOnlyBash(cmd, { powershell = false } = {}) {
   if (/`|\$\(/.test(cmd)) return false; // command substitution can run anything
   const bare = stripQuoted(cmd).replace(/\d?>\s*\/dev\/null|2>&1/g, '');
   if (/>/.test(bare)) return false; // writes a file
@@ -114,6 +120,7 @@ function isReadOnlyBash(cmd) {
     if (WRITES_IN_PIECE.test(p)) return false;
     if (pieceChangesSomething(p, rawPieces[i])) return false;
     if (READONLY_PIECE.test(p)) return true;
+    if (powershell && READONLY_PS_PIECE.test(p)) return true;
     return pieceIsHarnessNodeInvocation(rawPieces[i]);
   });
 }
@@ -251,7 +258,12 @@ function isWriteInsideRecordsFolder(toolName, toolInput) {
 function allowHarnessCommand(input, switches) {
   const tool = String(input.tool_name || '');
   if ((switches.permissions || {}).allowHarnessCommands === false) return;
-  const isSafeBash = tool === 'Bash' && (safeHarnessCommand(input.tool_input && input.tool_input.command) || isRecordHeredoc(input.tool_input && input.tool_input.command));
+  const cmd = input.tool_input && input.tool_input.command;
+  // PowerShell (Windows without Git Bash) runs harness commands the same way, but it evaluates a bare
+  // ( … ), { … } or @( … ) inside an argument, so those never pass as "only a harness command" there.
+  // The record heredoc is bash syntax, so on PowerShell a record save asks the person as usual.
+  const isSafeBash = (tool === 'Bash' && (safeHarnessCommand(cmd) || isRecordHeredoc(cmd)))
+    || (tool === 'PowerShell' && !psEvaluatesSomething(cmd) && safeHarnessCommand(cmd));
   const isRecordsWrite = isWriteInsideRecordsFolder(tool, input.tool_input);
   if (!isSafeBash && !isRecordsWrite) return;
   h.out(JSON.stringify({ hookSpecificOutput: {
@@ -299,8 +311,8 @@ function recordRitualRead(input) {
     let lines = 0;
     try { lines = fs.readFileSync(ritual, 'utf8').split('\n').length; } catch (_) { /* unreadable */ }
     full = (!ti.offset || Number(ti.offset) <= 1) && (!ti.limit || Number(ti.limit) >= lines);
-  } else if (tool === 'Bash') {
-    const m = String(ti.command || '').match(/^\s*cat\s+(?:"([^"]+)"|'([^']+)'|(\S+))\s*(?:2>\s*\/dev\/null)?\s*$/);
+  } else if (tool === 'Bash' || tool === 'PowerShell') {
+    const m = String(ti.command || '').match(/^\s*(?:cat|type|gc|Get-Content)\s+(?:"([^"]+)"|'([^']+)'|(\S+))\s*(?:2>\s*\/dev\/null)?\s*$/i);
     full = !!m && samePath(m[1] || m[2] || m[3], ritual);
   }
   if (!full) return;
@@ -364,6 +376,16 @@ function isUnderstandingCall(toolName, toolInput, doneFileBase) {
     if (VERIFY_BASH.test(cmd)) return true; // verification changes nothing
     return false;
   }
+  // Windows without Git Bash: Claude's command tool is PowerShell. Same rules, PowerShell's spelling.
+  if (toolName === 'PowerShell') {
+    const cmd = String((toolInput && toolInput.command) || '');
+    if (cmd.includes(doneFileBase) || /coherence[\\/]done-/.test(cmd)) return true; // the attestation itself
+    if (psEvaluatesSomething(cmd)) return false;
+    if (harnessInvocation(cmd) !== null) return true;
+    if (isReadOnlyBash(cmd, { powershell: true })) return true;
+    if (VERIFY_BASH.test(cmd) || VERIFY_PS.test(cmd)) return true;
+    return false;
+  }
   // MCP tools that only look things up.
   if (/(_search$|_search_|__search|_query$|__query|_find$|__find|__read|__list|__get)/.test(toolName)) return true;
   return false;
@@ -376,7 +398,7 @@ function isUnderstandingCall(toolName, toolInput, doneFileBase) {
 // while the turn's visible text holds no COHERENCE_CHECK. Where none of the turn's text is visible (a runtime
 // that records the reply later) nothing can be checked, so the attestation is accepted, as before.
 function attestShownNothing(input, tool, cg) {
-  if (tool !== 'Bash' || cg.requirePrintedCheck === false) return false;
+  if ((tool !== 'Bash' && tool !== 'PowerShell') || cg.requirePrintedCheck === false) return false;
   const rest = harnessInvocation((input.tool_input && input.tool_input.command) || '');
   if (rest === null || !/^attest\b/.test(rest)) return false;
   const turn = transcript.currentTurn(input.transcript_path);
@@ -732,7 +754,8 @@ function intentSearchGate(input, switches) {
     try { fs.mkdirSync(path.dirname(marker), { recursive: true }); fs.writeFileSync(marker, 'searched'); } catch (_) { /* ignore */ }
     return;
   }
-  const isCodeSearch = tool === 'Grep' || tool === 'Glob' || (tool === 'Bash' && CODE_SEARCH_BASH.test(cmd));
+  const isCodeSearch = tool === 'Grep' || tool === 'Glob' || (tool === 'Bash' && CODE_SEARCH_BASH.test(cmd))
+    || (tool === 'PowerShell' && (CODE_SEARCH_BASH.test(cmd) || /^\s*(Select-String|sls)\b/i.test(cmd)));
   if (!isCodeSearch || fs.existsSync(marker)) return;
   // Fire once per session, whether or not the agent follows it.
   try { fs.mkdirSync(path.dirname(marker), { recursive: true }); fs.writeFileSync(marker, 'prompted'); } catch (_) { return; }

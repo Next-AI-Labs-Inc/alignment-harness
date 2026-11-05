@@ -42,7 +42,7 @@ function isSubagent(input) {
   const tp = input.transcript_path;
   const sid = input.session_id;
   if (!tp || !sid) return false;
-  const base = String(tp).split('/').pop().replace(/\.jsonl$/, '');
+  const base = String(tp).split(/[\\/]/).pop().replace(/\.jsonl$/, ''); // Windows paths use \
   return base !== String(sid);
 }
 

@@ -40,7 +40,7 @@ const NORMAL_SKIP = new Set(['selfScore', 'savings']);
 const SOURCE_FILE = /\.(jsx?|tsx?|mjs|cjs|css|scss|vue|svelte|py|rb|go|rs|java|kt|swift|php|cs|c|cc|cpp|h|hpp|sh|sql)$/i;
 
 // A command that runs something (as opposed to reading or editing).
-const RUNS_SOMETHING = /(^|[\s;&|(])(npm (test|run)|npx |yarn |pnpm |bun |jest|vitest|pytest|python3? |node |deno |go (test|run)|cargo (test|run)|make |mvn |gradle|rspec|phpunit|dotnet (test|run)|swift (test|run)|curl |wget |http |playwright|cypress|mongosh|psql|mysql |redis-cli|sqlite3|docker |kubectl |bash \S+\.sh|sh \S+\.sh|\.\/\S+)/;
+const RUNS_SOMETHING = /(^|[\s;&|(])(npm (test|run)|npx |yarn |pnpm |bun |jest|vitest|pytest|python3? |node |deno |go (test|run)|cargo (test|run)|make |mvn |gradle|rspec|phpunit|dotnet (test|run)|swift (test|run)|curl |wget |http |playwright|cypress|mongosh|psql|mysql |redis-cli|sqlite3|docker |kubectl |bash \S+\.sh|sh \S+\.sh|\.\/\S+|Invoke-WebRequest |iwr |Invoke-RestMethod |irm |Invoke-Pester|\.\\\S+)/i;
 
 function claimFound(text, sensitivity) {
   const hits = [];
@@ -56,7 +56,7 @@ function evidenceIn(turn) {
   for (const u of turn.toolUses) {
     const n = String(u.name || '');
     // The harness's own commands (score, attest, contract, memory search) are bookkeeping, not proof.
-    if (n === 'Bash' && RUNS_SOMETHING.test(withoutHarnessCommands((u.input && u.input.command) || ''))) kinds.push('ran-a-command');
+    if ((n === 'Bash' || n === 'PowerShell') && RUNS_SOMETHING.test(withoutHarnessCommands((u.input && u.input.command) || ''))) kinds.push('ran-a-command');
     if (/playwright|puppeteer|chrome|browser|devtools|preview|screenshot|navigate/i.test(n)) kinds.push('browser');
   }
   const results = turn.toolResults.join('\n');
@@ -68,10 +68,10 @@ function evidenceIn(turn) {
 // A turn whose only commands were the harness's own (calibration, attest, score, status, records…) and which
 // edited nothing has no work to prove: holding it only makes the agent answer the gate in front of the person.
 // An edit, or any other tool that can act, takes the turn out of this.
-const BOOKKEEPING_TOOLS = new Set(['Bash', 'Read', 'Grep', 'Glob', 'LS', 'Skill', 'ToolSearch', 'TodoWrite', 'TaskCreate', 'TaskUpdate', 'TaskList', 'TaskGet']);
+const BOOKKEEPING_TOOLS = new Set(['Bash', 'PowerShell', 'Read', 'Grep', 'Glob', 'LS', 'Skill', 'ToolSearch', 'TodoWrite', 'TaskCreate', 'TaskUpdate', 'TaskList', 'TaskGet']);
 function onlyHarnessWork(turn) {
   const uses = turn.toolUses;
-  const bash = uses.filter((u) => u.name === 'Bash');
+  const bash = uses.filter((u) => u.name === 'Bash' || u.name === 'PowerShell');
   if (!bash.length) return false;
   if (uses.some((u) => !BOOKKEEPING_TOOLS.has(String(u.name || '')))) return false;
   return bash.every((u) => onlyHarnessCommands((u.input && u.input.command) || ''));
@@ -134,7 +134,7 @@ The very last thing you print should be the 20–30 second "here's exactly where
 review my work" — a clickable URL or one command.
 
 ${ceremony}
-It must contain: (1) HOW TO SEE IT — the exact steps the user takes (a page to open and what to click, or for work with no screen the one command they'd run) and what they will see that proves it; (2) WHAT CHANGED FOR PEOPLE — "When [situation], people now [experience] because [why]", one line per change; (3) ANYTHING UNFINISHED, in one sentence. ${edits.length ? `Files you edited this turn: ${[...new Set(edits.map((e) => String(e.input.file_path || e.input.notebook_path).split('/').slice(-2).join('/')))].slice(0, 8).join(', ')}.` : ''}
+It must contain: (1) HOW TO SEE IT — the exact steps the user takes (a page to open and what to click, or for work with no screen the one command they'd run) and what they will see that proves it; (2) WHAT CHANGED FOR PEOPLE — "When [situation], people now [experience] because [why]", one line per change; (3) ANYTHING UNFINISHED, in one sentence. ${edits.length ? `Files you edited this turn: ${[...new Set(edits.map((e) => String(e.input.file_path || e.input.notebook_path).split(/[\\/]/).slice(-2).join('/')))].slice(0, 8).join(', ')}.` : ''}
 Before calling anything complete, check every assumption you made about how the code works against the real code or a real run.`);
     }
     if (te.requirementCapture !== false && te.enabled !== false
