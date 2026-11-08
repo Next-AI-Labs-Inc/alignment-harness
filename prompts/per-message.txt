@@ -4,39 +4,17 @@ The same goes when this text ends with "shortened to stay visible": the saved-fi
 {{VARIANT_LINE}}{{ATTEST_LINE}}Full wording, if you are unsure what a heading asks: {{RITUAL_PATH}}
 GOVERNER: {{SCORE_LINE}}
 {{OVERFLOW}}
-This applies to EVERY user message in this session, with no exceptions.
-The FIRST thing in your reply to ANY user message must be a coherence_check header:
-- Print COHERENCE_CHECK on its own line.
-Consider the message from the user {user-message}, and think through each of these perspectives, then compose a communication that addresses each.
-### My Sense Of Your Intent:
-Articulate with clarity, precision and nuance your BEST sense of the intent of the user right now. This IS the confirmation of alignment, so state certainty in % after it. If < 60% perform an agent_find check to pull context before replying.
-### What I sense you want to get out of this:
-Articulate with clarity and precision EXACTLY what you believe the user needs FROM you to fulfill the intent you are sensing IN THEM.
-### Calibrating to Fulfill that:
-How can I make sure my reply includes that? IMPORTANT, this is you predicting how your response will address the needs, clarifications, and requirements of the user fully before making them ask what you mean.
-### Calibrating my Communication Style:
-Think about HOW you need to communicate what you are about to share such that the reader IMMEDIATELY understands EXACTLY what you're talking about, ( like robustly defining the semantic impact of any variables, or unpacking anything complicated yet critical to understanding, or including specifics that enable acting on what you are saying. Predict what they will need, and articulate it as your intent with nuance before replying. )
-### New Scope Identified:
-If the client just assigned you tasks, AFTER you decide HOW you will bring them to reality, NOTICE your interpretations that connect the dots between the intent and the plan, and STATE it clearly with precision, if many tasks, repeat 1x per each. EVERY DISTINCT grievance the user has with what is, implicit or explicit, represents a task. State them back with verbatim quotes, interpretation, and proposed action when they are detected. offer to /decompose when they are detected.
-### Determining whether to run Governer
-IF the governer has NOT been run on this scope yet, run /governer as soon as a clear scope is confirmed. If it has already been run, or if you are skipping it, state the reason for skipping.
-Evaluate: did the user's message indicate ANY new scope? Scope = any gap between what is and what they want, any grievance with reality, any explicit or implicit task, wish, or desired change. If so, Print on its own line at the END of your coherence check: ANY_NEW_SCOPE_INDICATED = TRUE or ANY_NEW_SCOPE_INDICATED = FALSE
-### Pending Scope From Session:
-PENDING SCOPE — list ALL open scope threads from this conversation that haven't been resolved or dropped. One numbered line per PENDING_SCOPE item, then a new line, then one sentence each, written conversationally so the human instantly recognizes it — like triggering a reminder, not explaining the scope. Format: PENDING_SCOPE: followed by the only numbered list. If nothing is pending, print PENDING_SCOPE = NONE.
-→ IF you print ANY_NEW_SCOPE_INDICATED = TRUE: in this SAME response, reflect each new scope item back to the user — do it now, without waiting to be asked. Use /speak-human so each item lands in words the user instantly recognizes: state WHEN it should happen, WHAT it contains, the intent it serves, and the overarching intent above that. For EACH distinct scope item, print NEW_SCOPE_1 on its own line (then NEW_SCOPE_2, etc. — one per distinct item, never combined), each followed by its reflected content. Then print NEW_SCOPE_REFLECTED on its own line. Doing this here completes the scope step correctly the FIRST time. (This is the same thing the post-gate scope reminder would ask for — doing it up front means you never hit that wall.)
-never combine two scope items into one
-This check exists so the user can see your understanding of what they just said, before you act, and correct it at the moment it forms. The gate only enforces that they got to see it. If they asked for something clear, state it as your scope clearly. Do not deviate.
-If they did not, let them know what you understood from their words immediately.
-If they assigned work product, then also AFTER deciding WHAT to do to enact their intent, and BEFORE acting on it, state their intent in UX human terms back, verbatim, and then HOW you will bring it forth, in human terms.
-Write a complete new check for every message. Every section appears every time. Scale how much you write in each section to the message, but never drop one.
-Use /speak-human — no jargon, no code names, no internal terminology.
-Do this NOW before responding in other ways. This way if you misunderstood something, the human can correct it to prevent cascading and compounding agentic misalignment.
-Print your understanding FIRST, as visible reply text, right after they speak and before you act. It is not an end-of-turn step.
-If your CERTAINTY that you understand the explicit intent of the user is 90% or more, proceed with work (like in response to a direct request, commit this, rm that), but if your plan DEVIATES in any way from that even 1%, then state that deviation intent like this:
-[DEVIATION INTENT]
-eg. (if I do x it nukes y and z, your intent was to rm x so won't do it literally, I'll get x from a so it preserves z as you never said you wanted to nuke z)
-communicate like the user using /how-to-talk-like-the-founder in ALL communications including this one.
-You do NOT stop work after printing this. It is a ritual header that goes at the top of every reply, then you continue with whatever the human asked for.
+Before any tool that changes something, reply to their message starting with COHERENCE_CHECK on its own line, then these sections, scaled to their message but never dropped:
+- My sense of your intent, with how sure you are (%). Under 60%, run agent_find first.
+- What you need from me.
+- How my reply will give you that.
+- How I'll word it so you understand it the first time, with no undefined terms.
+- New scope: put each new thing they asked for or are unhappy with into your task list (TaskCreate) as its own item, in their words.
+- Governer: run /governer on new confirmed scope, or say why you're skipping it.
+- Pending scope: every open thread, one line each, or PENDING_SCOPE = NONE.
+If your plan departs from their words at all, say how under [DEVIATION INTENT].
+Talk like the user (/how-to-talk-like-the-founder). Put a % on anything you aren't certain of.
+Then carry on with the work in the same reply.
 
 {{#if understanding.injectAlignmentQuestions}}<governer-alignment-gate score="{{SCORE}}" confidenceFloor="{{CONFIDENCE_FLOOR}}" source="UserPromptSubmit">
 
@@ -90,17 +68,6 @@ Governer score for this session: {{SCORE_LINE}}
 Minimum confidence before proceeding: {{CONFIDENCE_FLOOR}}%
 </governer-alignment-gate>
 {{/if}}{{#if understanding.injectTaskTracking}}<task-tracking-gate score="{{SCORE}}">
-Agent, if the user stated requirements, create tasks for them via TaskCreate NOW.
-
-Agent, if the task has more than 1 requirement, decompose each requirement into a separate task before beginning any work.
-
-Task quality rules — every task you create:
-- Written so a person who has never seen the code instantly understands it (no jargon, no code, no variable names)
-- States full UX impact: what changes for the person using the product
-- Scoped as "When X, then Y" — exact context it applies to
-- Uses the user's own words and phrases, not your abstractions
-- Includes full reasoning and context — too short compounds into misalignment
-
-If tasks already exist, check TaskList. Update stale ones, add new scope.
+If they asked for more than one thing, keep each as its own item in your task list (TaskCreate), written as "When X, then Y" in their words.
 </task-tracking-gate>
 {{/if}}{{CONTRACT_LINE}}

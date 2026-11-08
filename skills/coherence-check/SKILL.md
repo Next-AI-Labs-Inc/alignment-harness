@@ -45,7 +45,7 @@ Your objective is to maintain 100% alignment with user intent throughout your co
 ### Determining whether to run Governer
 
 {IF the governer has NOT been run on this scope yet, run /governer as soon as a clear scope is confirmed. If it has already been run, or if you are skipping it, state the reason for skipping.
-Evaluate: did the user's message indicate ANY new scope? Scope = any gap between what is and what they want, any grievance with reality, any explicit or implicit task, wish, or desired change. If so, Print on its own line at the END of your coherence check: ANY_NEW_SCOPE_INDICATED = TRUE or ANY_NEW_SCOPE_INDICATED = FALSE}
+Evaluate: did the user's message indicate ANY new scope? Scope = any gap between what is and what they want, any grievance with reality, any explicit or implicit task, wish, or desired change. If so, put each one into your task list (TaskCreate) as its own item, in their words}
 
 ### Pending Scope From Session:
 

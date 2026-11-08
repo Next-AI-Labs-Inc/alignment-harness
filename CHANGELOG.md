@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.2 (2026-11-08)
+
+The check an agent prints after each of your messages is shorter, and nothing in it reaches the agent twice.
+
+- **One short check per message.** Each message now carries the check as a short list of sections instead of the full ritual text. The full wording still reaches the agent once per session, in prompts/coherence-ritual.txt.
+- **New scope goes in the agent's task list.** The agent no longer prints ANY_NEW_SCOPE_INDICATED, NEW_SCOPE_1 or NEW_SCOPE_REFLECTED. It puts each new thing you asked for into its task list (TaskCreate), in your words, and says so in the attest line with `--scope TRUE`. The scope gate keeps working from that: new scope still has to be scored, and at 80 or more it still waits for your go. An agent that still prints the old lines is accepted too.
+- **The task-list instruction is one sentence.**
+- **Nothing is sent twice.** When a blocked agent is shown the full wording, that counts as its once-per-session read, so it is not sent again or read again, and the block no longer repeats the questions above it. A second block on the same message is two lines that say where the wording is saved.
+
 ## 0.2.1 (2026-11-04)
 
 Two more ways around the person's permission prompt are closed. Both were found in a review run on a Windows PC during the first live demo, and both were reproduced against 0.2.0 before fixing.

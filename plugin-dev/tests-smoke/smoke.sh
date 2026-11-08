@@ -177,13 +177,15 @@ edit8() { evt8 ',"tool_name":"Edit","tool_input":{"file_path":"/x.js"}' | hook p
 arm8
 edit8; [ $? -eq 2 ] && grep -q "coherence_check_per_message_ritual" "$TMP/e8" && ok "a blocked agent sees the full ritual" || bad "block message lacks the full ritual"
 sleep 1; touch "$CLAUDE_PLUGIN_DATA/state/coherence/done-$S8"
-edit8; [ $? -eq 2 ] && grep -q "read the full ritual once" "$TMP/e8" && ok "attestation waits for one full read of the ritual" || bad "attestation counted without reading the ritual"
-grep -q "$RITUAL" "$TMP/e8" && grep -q "coherence_check_per_message_ritual" "$TMP/e8" && ok "that block names the file and carries its text" || bad "ritual-read block lacks path or text"
-evt8 ",\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"$RITUAL\",\"limit\":3}" | hook pre-tool >/dev/null 2>&1
-edit8; [ $? -eq 2 ] && grep -q "read the full ritual once" "$TMP/e8" && ok "a partial read doesn't count" || bad "partial read counted"
-evt8 ",\"tool_name\":\"Read\",\"tool_input\":{\"file_path\":\"$RITUAL\"}" | hook pre-tool >/dev/null 2>&1
-edit8; grep -q "read the full ritual once" "$TMP/e8" && bad "full read not counted" || ok "a full read counts; the attestation stands without re-attesting"
+# The first block printed the full wording, and that counts as the once-per-session read (founder, 8 Nov:
+# "if anything is printed 2x instead of one, find the cause and rm the 2nd printing cause"), so the attestation stands.
+edit8; ! grep -q "full coherence ritual yet" "$TMP/e8" && ok "the full wording shown in a block counts as the read: not sent again" || bad "the full wording was sent a second time"
 grep -q "governer" "$TMP/e8" && ok "the edit moves on to the governer gate" || bad "edit did not reach the governer gate"
+# An agent that attests without ever being blocked sees the full wording once, and that counts too.
+S8=88888888-cccc-cccc-dddd-eeeeeeeeeeee; TP8="$TMP/$S8.jsonl"; : > "$TP8"
+arm8; sleep 1; touch "$CLAUDE_PLUGIN_DATA/state/coherence/done-$S8"
+edit8; [ $? -eq 2 ] && grep -q "full coherence ritual yet" "$TMP/e8" && grep -q "$RITUAL" "$TMP/e8" && grep -q "coherence_check_per_message_ritual" "$TMP/e8" && ok "attesting before the wording was ever shown: it is shown once, with its file named" || bad "ritual-read block missing or lacks path or text"
+edit8; ! grep -q "full coherence ritual yet" "$TMP/e8" && ok "after that one showing, the attestation stands without a second copy" || bad "the wording was shown twice"
 arm8; sleep 1; touch "$CLAUDE_PLUGIN_DATA/state/coherence/done-$S8"
 edit8; grep -q "read the full ritual once" "$TMP/e8" && bad "re-read demanded on a later message" || ok "later messages don't ask for it again"
 # Fixture ids use one repeated character per group, which is what the private-data scanner treats as an obvious placeholder.
@@ -236,10 +238,10 @@ gs 44444444-aaaa-bbbb-cccc-dddddddddddd; garm; gsay "$CHECK_TRUE"
 gedit; [ $? -eq 2 ] && grep -q "Cannot route this scope" "$TMP/ge" && ok "4. new scope with no score yet: told to score it, not to guess" || bad "4. unscored scope not routed"
 grep -q "When this does not fit" "$TMP/ge" && ok "4. the no-score block says when it does not fit" || bad "4. the no-score block states no limits"
 cli $GS score --task "add a settings toggle" --category feature --ac 5 --hp 5 --ew 5 >/dev/null
-gedit; [ $? -eq 2 ] && grep -q "New scope detected but not reflected" "$TMP/ge" && grep -q "NEW_SCOPE_REFLECTED" "$TMP/ge" && ok "4. score 50, scope not restated: held until NEW_SCOPE_REFLECTED" || bad "4. unreflected scope passed"
-grep -q "Alright! So you identified some possible new scope" "$TMP/ge" && grep -q "When this does not fit" "$TMP/ge" && ok "4. that block carries the author's scope text and says when it does not fit" || bad "4. scope block lacks the author's text or its limits"
-gsay $'NEW_SCOPE_REFLECTED\nNEW_SCOPE_1\nWhen you save settings, the toggle stays as you left it.'
-gedit; [ $? -eq 0 ] && ok "4. once restated, the work flows (no wait below 80)" || bad "4. reflected scope still held"
+gedit; [ $? -eq 2 ] && grep -q "New scope detected but not put in your task list" "$TMP/ge" && grep -q "TaskCreate" "$TMP/ge" && ok "4. score 50, scope not in the task list: held until it is" || bad "4. scope not in the task list passed"
+grep -q "when it happens, what it contains, and the intent it serves" "$TMP/ge" && grep -q "When this does not fit" "$TMP/ge" && ok "4. that block asks for each item in their words and says when it does not fit" || bad "4. scope block lacks the ask or its limits"
+node -e 'require("fs").appendFileSync(process.argv[1],JSON.stringify({type:"assistant",timestamp:new Date().toISOString(),message:{role:"assistant",content:[{type:"tool_use",id:"t1",name:"TaskCreate",input:{subject:"When you save settings, the toggle stays as you left it"}}]}})+"\n")' "$GTP"
+gedit; [ $? -eq 0 ] && ok "4. once the scope is in the task list, the work flows (no wait below 80)" || bad "4. scope in the task list still held"
 garm "also the second toggle"; gsay "$CHECK_TRUE"; gedit; [ $? -eq 0 ] && ok "4. a later scope this session refers to the routed score" || bad "4. re-blocked every scope"
 # 4e. Stepping past when it plainly does not fit: a TRUE that was a mistake, corrected to FALSE with a reason,
 # lets the work go on to the next gate (here the governer gate, since nothing is scored) instead of the scope block.
@@ -247,9 +249,9 @@ gs 44444444-dddd-bbbb-cccc-dddddddddddd; garm "how does the charge work"; gsay "
 gedit; grep -q "Cannot route this scope" "$TMP/ge" || bad "4e. setup: the scope block did not fire"
 gsay $'No new scope after all: this message only asks how something works.\nANY_NEW_SCOPE_INDICATED = FALSE'
 gedit; ! grep -q "Cannot route this scope" "$TMP/ge" && ! grep -q "New scope detected" "$TMP/ge" && grep -q "Governer has not scored this task" "$TMP/ge" && ok "4. a TRUE corrected to FALSE with a reason steps past the scope block" || bad "4. the corrected scope line did not step past the scope block"
-# The partial check (the scope line missing) gets the author's own formatting block.
+# A printed check with no scope line clears the check gate: scope lives in the task list now, not a printed line.
 gs 44444444-cccc-bbbb-cccc-dddddddddddd; garm; gsay $'COHERENCE_CHECK\nMy sense of your intent: change the charge (90%).'
-gedit; [ $? -eq 2 ] && grep -q "Do NOT stop work or await approval." "$TMP/ge" && grep -q "this gate must never cause you to stop working and hand control back" "$TMP/ge" && ok "4. a check with the scope line missing gets the author's formatting block" || bad "4. partial-check block is not the author's text"
+gedit; ! grep -q "Coherence check not completed" "$TMP/ge" && ! grep -q "one line missing" "$TMP/ge" && ok "4. a check with no scope line is not sent back for one" || bad "4. a check was sent back for the old scope line"
 # 4b. Inconsequential scope flows through without the restatement.
 gs 44444444-eeee-bbbb-cccc-dddddddddddd; cli $GS score --task "fix a typo in a code comment" --category docs-only --ac 1 --hp 1 --ew 1 >/dev/null
 garm "fix the typo"; gsay "$CHECK_TRUE"; gedit; [ $? -eq 0 ] && ok "4. score under 40 with no user impact: flows without stopping" || bad "4. inconsequential scope held"
@@ -273,6 +275,10 @@ gedit; [ $? -eq 0 ] && ok "4. rescored below 80: the wait ends at once" || bad "
 gs 55555555-aaaa-bbbb-cccc-dddddddddddd; garm
 for i in 1 2 3; do gedit; [ $? -eq 2 ] || bad "5. coherence block $i did not block"; sleep 2.1; done
 gedit; [ $? -eq 0 ] && ok "5. coherence: 3 blocks on one message, then a reminder" || bad "5. coherence never stepped back"
+# 5a. A second block on the same message is two lines, not the whole wording again (card 7f).
+gs 55555555-bbbb-bbbb-cccc-dddddddddddd; garm
+gedit; first=$(wc -c < "$TMP/ge"); sleep 2.1; gedit
+grep -q "You were blocked again on the same message" "$TMP/ge" && [ "$(wc -c < "$TMP/ge")" -lt 1200 ] && [ "$first" -gt 1200 ] && ok "5a. the second block on one message is two lines; the first carried the wording" || bad "5a. the second block repeated the wording (first $first chars)"
 gs 55555555-eeee-bbbb-cccc-dddddddddddd
 printf '%s\n' '{"type":"assistant","timestamp":"2026-01-01T00:00:05Z","message":{"role":"assistant","content":[{"type":"tool_use","id":"g5","name":"Edit","input":{"file_path":"/repo/src/a.js","old_string":"a","new_string":"b"}}]}}' >> "$GTP"
 for i in 1 2 3 4 5 6; do gstop "Changed a.js."; [ $? -eq 2 ] || bad "5. proof block $i did not block"; done
@@ -286,7 +292,7 @@ cli $GS score --task "add a settings toggle" --category feature --ac 5 --hp 5 --
 garm
 for i in 1 2 3; do gedit; [ $? -eq 2 ] || bad "5b. coherence block $i did not block"; sleep 2.1; done
 gsay "$CHECK_TRUE"
-gedit; [ $? -eq 2 ] && grep -q "New scope detected but not reflected" "$TMP/ge" && ok "5b. three coherence blocks used, then a TRUE check with no restatement still raises the restatement block" || bad "5b. the restatement was pre-empted by the coherence limit"
+gedit; [ $? -eq 2 ] && grep -q "New scope detected but not put in your task list" "$TMP/ge" && ok "5b. three coherence blocks used, then a TRUE check with no restatement still raises the restatement block" || bad "5b. the restatement was pre-empted by the coherence limit"
 codes=""; for i in 1 2 3; do sleep 2.1; gedit; codes="$codes$?"; done
 [ "$codes" = "220" ] && ok "5b. the restatement block steps back to a reminder after its own 3" || bad "5b. restatement step-back sequence $codes"
 gs 77777777-bbbb-bbbb-cccc-dddddddddddd

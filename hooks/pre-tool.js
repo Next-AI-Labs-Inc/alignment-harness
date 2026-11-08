@@ -351,13 +351,13 @@ function fullRitualText(sid) {
 // Same limits as every other coherence block: "remind" never blocks, and maxBlocksPerMessage steps back.
 function blockUntilRitualRead(sid, gateFile, tool, cg) {
   const ritual = ritualPathFor(sid);
-  const msg = `Your check is noted, but this session hasn't read the full coherence ritual yet. Each message shows only a short form of it; once per session, read the full wording, then the short form is enough. That rule is only about reading the file. The coherence check itself is owed on every message they send.
+  // The full wording is printed right here, so this counts as the once-per-session read.
+  try { fs.mkdirSync(path.dirname(ritualReadMarker(sid)), { recursive: true }); fs.writeFileSync(ritualReadMarker(sid), core.nowIso()); } catch (_) { /* a lost mark only re-asks */ }
+  const msg = `Your check is noted, but this session hadn't seen the full coherence ritual yet. Each message shows only a short form of it; the full wording is printed below, and that counts as your once-per-session read. The coherence check itself is still owed on every message they send.
 
-Read the whole file now (Read with no offset or limit, or \`cat\`), then retry this call. Your attestation still stands; there's no need to attest again. If the full wording changes what you understood, correct your check in your reply first.
+Read it below, then retry this call. Your attestation still stands; there's no need to attest again. If the full wording changes what you understood, correct your check in your reply first.
 
-  ${ritual}
-
-The full wording, so you are never short of it:
+The full wording (also saved at ${ritual}):
 ────────────────────────────────────────────────────────────
 ${fullRitualText(sid)}
 ────────────────────────────────────────────────────────────`;
@@ -467,37 +467,12 @@ function coherenceGate(input, switches) {
   if (input.transcript_path) {
     const text = transcript.assistantTextSince(input.transcript_path, gateMs - 60000);
     const hasCheck = text.includes('COHERENCE_CHECK');
-    const hasScope = /ANY_NEW_SCOPE_INDICATED\s*=\s*(TRUE|FALSE)/.test(text);
-    if (hasCheck && hasScope) {
+    if (hasCheck) {
       if (ritualReadStillNeeded(sid, cg)) return blockUntilRitualRead(sid, gateFile, tool, cg);
       routeNewScope(input, sid, gateMs, gateFile, tool, cg);
       try { fs.unlinkSync(gateFile); } catch (_) { /* ignore */ }
       core.log('CoherenceGateClearedFromTranscript', { sessionId: sid, tool });
       return;
-    }
-    if (hasCheck && cg.strength !== 'remind') {
-      const n = core.bumpBlockRound(sid, 'coherence', cg.blockRoundMs);
-      if (cg.maxBlocksPerMessage && n > cg.maxBlocksPerMessage) return downgrade(sid, gateFile, tool);
-      h.block(`BLOCKED — Coherence check found, one line missing. This is a FORMATTING
-requirement, not a permission request. Do NOT stop work or await approval.
-
-Print on its own line at the END of your reply:
-  ANY_NEW_SCOPE_INDICATED = FALSE  (no new scope) — that is ALL that is needed.
-  ANY_NEW_SCOPE_INDICATED = TRUE   (message contains new scope, task, grievance,
-     or desired change) — if TRUE, ALSO reflect the scope in this SAME reply so
-     you are not stopped a second time:
-       print NEW_SCOPE_REFLECTED on its own line, then NEW_SCOPE_1, NEW_SCOPE_2,
-       etc., each restating one scope item in terms the user will immediately
-       recognize (when it happens, what it contains, the intent it serves).
-
-Then attest through the channel this hook can see mid-turn:
-
-  ${attestCommand(core.safeId(sid))}
-
-After attesting, CONTINUE THE ASSIGNED WORK immediately. The user's standing
-directive: this gate must never cause you to stop working and hand control back.
-The ONLY case where you wait for an explicit go is a HIGHEST_LEVERAGE block
-(governer score >= 80), which announces itself as such.`);
     }
   }
 
@@ -515,21 +490,25 @@ The ONLY case where you wait for an explicit go is a HIGHEST_LEVERAGE block
   const n = core.bumpBlockRound(sid, 'coherence', cg.blockRoundMs);
   if (cg.maxBlocksPerMessage && n > cg.maxBlocksPerMessage) return downgrade(sid, gateFile, tool);
   core.log('CoherenceGateBlocked', { sessionId: sid, tool, blockNumber: n });
+  if (n > 1 && fullRitualText(sid)) {
+    // Blocked again on the same message: the full wording went out with the first block.
+    return h.block(`You were blocked again on the same message. The full instructions were sent to you on the first block, and they're saved at ${ritualPathFor(sid)}. Read that file, print your understanding check, run ${attestCommand(core.safeId(sid))}, then retry.`);
+  }
+  const ritualBelow = fullRitualForBlock(sid, questions);
+  const questionsSection = ritualBelow
+    ? 'Print COHERENCE_CHECK on its own line FIRST, then answer the questions in the full ritual printed below.'
+    : `IMPORTANT: Print COHERENCE_CHECK on its own line BEFORE answering these questions. This exact phrase signals you completed the coherence check.\n\n${questions}\n\nPrint COHERENCE_CHECK on its own line FIRST, then answer the questions above.`;
   h.block(`BLOCKED — Coherence check not completed.
 
 Coherence Issue Detected.  You have responded to a client message with a tool call instead of confirming understanding of the client's intent.  That is a violation of your core programming.  When the client sends a message, your FIRST step before tool calling MUST include performing a coherence check as this will allow for any misinterpretation to be caught at its moment of inception, which will enable you to perform the most critical function of your existence — the maintenance of alignment and clarity of the client's intent.  Proceed now and after all following client messages by printing COHERENCE_CHECK on its own line, then print your understanding of the user's message BEFORE using any tools that change things.
 
-IMPORTANT: Print COHERENCE_CHECK on its own line BEFORE answering these questions. This exact phrase signals you completed the coherence check.
-
-${questions}
-
-Print COHERENCE_CHECK on its own line FIRST, then answer the questions above.
+${questionsSection}
 
 THEN ATTEST (required on this runtime — the hook cannot see your printed text
 mid-turn): after you have printed the FULL check in this same response —
-COHERENCE_CHECK, the answers, ANY_NEW_SCOPE_INDICATED = TRUE/FALSE, scope
-reflections + NEW_SCOPE_REFLECTED when TRUE, and HIGHEST_LEVERAGE_ACK if this
-session's governer score is >= 80 — run this exact allowlisted command:
+COHERENCE_CHECK, the answers, each new thing they asked for in your task list,
+and HIGHEST_LEVERAGE_ACK if this session's governer score is >= 80 — run this
+exact allowlisted command:
 
   ${attestCommand(core.safeId(sid))}
 
@@ -541,8 +520,8 @@ Note: Reading files, searching, and querying knowledge oracles are NOT blocked �
 those help you understand. Only tools that CHANGE things (Edit, Write, destructive
 commands) are blocked until you demonstrate understanding.
 
-When this does not fit: the check is for a person speaking to you. If what came in was not a person (a background agent's or a tool's notice, with nothing of theirs to understand), print COHERENCE_CHECK with one sentence saying so and ANY_NEW_SCOPE_INDICATED = FALSE, then attest.
-(Block ${n}${cg.maxBlocksPerMessage ? ` of ${cg.maxBlocksPerMessage}; after that this becomes a reminder` : ''}.)${fullRitualForBlock(sid, questions)}`);
+When this does not fit: the check is for a person speaking to you. If what came in was not a person (a background agent's or a tool's notice, with nothing of theirs to understand), print COHERENCE_CHECK with one sentence saying so, then attest with --scope FALSE.
+(Block ${n}${cg.maxBlocksPerMessage ? ` of ${cg.maxBlocksPerMessage}; after that this becomes a reminder` : ''}.)${ritualBelow}`);
 }
 
 // ── New scope, routed on the real score (the author's gate, restored 2026-10-17) ──────────────────────
@@ -551,6 +530,25 @@ When this does not fit: the check is for a person speaking to you. If what came 
 // HIGHEST_LEVERAGE_ACK, then waits for the user's go. Inconsequential scope (score under 40 and user impact
 // under 20) flows through, and once one scope has been routed this session later ones refer to that score.
 // Only what the transcript shows can be checked: where none of the turn's text is visible, this fails open.
+// New scope, as the agent attested it for this message (attest --scope TRUE).
+function attestedNewScopeSince(sid, sinceMs) {
+  try {
+    const lines = fs.readFileSync(path.join(core.P.coherence, 'reflections.jsonl'), 'utf8').trim().split('\n').reverse();
+    for (const l of lines) { const r = JSON.parse(l); if (r.sessionId !== sid) continue; return Date.parse(r.at) >= sinceMs - 2000 && r.newScope === true; }
+  } catch (_) { /* nothing attested */ }
+  return false;
+}
+// Whether the agent put anything in its task list since the user spoke.
+function taskListedSince(transcriptPath, sinceMs) {
+  let raw; try { raw = fs.readFileSync(transcriptPath, 'utf8'); } catch (_) { return false; }
+  for (const line of raw.split('\n')) {
+    if (!line.includes('tool_use') || !/TaskCreate|TodoWrite/.test(line)) continue;
+    let e; try { e = JSON.parse(line); } catch (_) { continue; }
+    if (Date.parse(e.timestamp || 0) < sinceMs - 2000) continue;
+    const m = e.message; if (m && Array.isArray(m.content) && m.content.some(p => p && p.type === 'tool_use' && /^(TaskCreate|TodoWrite)$/.test(p.name))) return true;
+  }
+  return false;
+}
 function scopeRoutedFile(sid) { return path.join(core.P.coherence, `scope-routed-${core.safeId(sid)}`); }
 // Each kind of scope block counts its own blocks ('scope' for the restatement and the missing score,
 // 'highLeverage' for the top-band acknowledgement), with the same limit as every other coherence block.
@@ -569,7 +567,8 @@ function routeNewScope(input, sid, gateMs, gateFile, tool, cg) {
   const text = transcript.assistantTextSince(input.transcript_path, gateMs - 2000);
   if (!text.trim()) return; // nothing visible to check: fail open
   const lastTrue = text.lastIndexOf('ANY_NEW_SCOPE_INDICATED = TRUE');
-  if (lastTrue < 0 || lastTrue < text.lastIndexOf('ANY_NEW_SCOPE_INDICATED = FALSE')) return;
+  const printedTrue = lastTrue >= 0 && lastTrue > text.lastIndexOf('ANY_NEW_SCOPE_INDICATED = FALSE');
+  if (!printedTrue && !attestedNewScopeSince(sid, gateMs)) return;
   if (fs.existsSync(scopeRoutedFile(sid))) return; // already routed this session: refer to that score
   const cs = core.currentScore(sid);
   const attest = attestCommand(core.safeId(sid));
@@ -584,7 +583,7 @@ stop-vs-proceed on REAL signal:
 
 The remedy is to run /alignment-harness:governer, not to wait. Once it has written state, retry.
 
-When this does not fit: if the message held no new scope after all, print ANY_NEW_SCOPE_INDICATED = FALSE with one sentence saying why, then retry; no score is needed for that.`);
+When this does not fit: if the message held no new scope after all, say so in one sentence, attest again with --scope FALSE, then retry; no score is needed for that.`);
   }
   const g = (cs.state && cs.state.governer) || {};
   const touch = Number(g.degreeToWhichThisTaskAffectsWhatUsersExperience);
@@ -613,12 +612,12 @@ communication itself must be special — proportional to the stakes, not the usu
 When this does not fit: if the score on file belongs to an earlier, different task, score this task with
 /alignment-harness:governer first. The wait is only for work that is itself top-band.`, 'highLeverage');
   }
-  if (!text.includes('NEW_SCOPE_REFLECTED')) {
-    return scopeBlock(sid, gateFile, tool, cg, 'NewScopeNotReflected', `BLOCKED — New scope detected but not reflected back to the user.
+  if (!text.includes('NEW_SCOPE_REFLECTED') && !taskListedSince(input.transcript_path, gateMs)) {
+    return scopeBlock(sid, gateFile, tool, cg, 'NewScopeNotReflected', `BLOCKED — New scope detected but not put in your task list.
 
-${core.loadPrompt('scope-reflection.txt').trim()}
+Put each new thing they asked for or are unhappy with into your task list (TaskCreate) as its own item, in their words, so they can see you got it: when it happens, what it contains, and the intent it serves.
 
-Once you have printed NEW_SCOPE_REFLECTED and each NEW_SCOPE_N item, attest:
+Once each new item is in your task list, attest:
 
   ${attest}
 
@@ -628,7 +627,7 @@ for a reply. The user corrects a wrong reflection faster than the user answers a
 stopped agent. The ONLY block that waits for an explicit go is HIGHEST_LEVERAGE
 (governer score >= 80).
 
-When this does not fit: if the message held no new scope after all, print ANY_NEW_SCOPE_INDICATED = FALSE with one sentence saying why, then retry.`);
+When this does not fit: if the message held no new scope after all, say so in one sentence, attest again with --scope FALSE, then retry.`);
   }
   try { fs.writeFileSync(scopeRoutedFile(sid), core.nowIso()); } catch (_) { /* a lost mark only re-asks */ }
   if (top) {
@@ -673,6 +672,7 @@ function highestLeverageWait(input, switches) {
 function fullRitualForBlock(sid, questionsShown) {
   const full = fullRitualText(sid);
   if (!full || full === String(questionsShown || '').trim()) return '';
+  try { fs.mkdirSync(path.dirname(ritualReadMarker(sid)), { recursive: true }); fs.writeFileSync(ritualReadMarker(sid), core.nowIso()); } catch (_) { /* a lost mark only re-asks */ }
   return `
 
 The full coherence ritual (${ritualPathFor(sid)}):

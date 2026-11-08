@@ -69,8 +69,8 @@
     // so maxBlocksPerMessage still applies. false = trust the attestation, as before.
     "requirePrintedCheck": true,
 
-    // true = when the check says ANY_NEW_SCOPE_INDICATED = TRUE, the agent restates each scope item
-    // (NEW_SCOPE_REFLECTED, NEW_SCOPE_1 …) before changing anything. Scope scored under 40 with user impact
+    // true = when the agent attests new scope (--scope TRUE), it puts each scope item in its task list
+    // (TaskCreate) before changing anything. Scope scored under 40 with user impact
     // under 20 flows through; once one scope is routed in a session, later ones refer to that score.
     // These blocks are counted on their own, with the same limit as maxBlocksPerMessage, so the blocks that
     // come first on a message can't use the limit up before the restatement is asked for.

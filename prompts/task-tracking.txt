@@ -1,14 +1,3 @@
 <task-tracking-gate score="{{SCORE}}">
-Agent, if the user stated requirements, create tasks for them via TaskCreate NOW.
-
-Agent, if the task has more than 1 requirement, decompose each requirement into a separate task before beginning any work.
-
-Task quality rules — every task you create:
-- Written so a person who has never seen the code instantly understands it (no jargon, no code, no variable names)
-- States full UX impact: what changes for the person using the product
-- Scoped as "When X, then Y" — exact context it applies to
-- Uses the user's own words and phrases, not your abstractions
-- Includes full reasoning and context — too short compounds into misalignment
-
-If tasks already exist, check TaskList. Update stale ones, add new scope.
+If they asked for more than one thing, keep each as its own item in your task list (TaskCreate), written as "When X, then Y" in their words.
 </task-tracking-gate>
